@@ -1,0 +1,263 @@
+#
+# Copyright (c) 2007 Open Kernel Labs, Inc. (Copyright Holder).
+# All rights reserved.
+# 
+# 1. Redistribution and use of OKL4 (Software) in source and binary
+# forms, with or without modification, are permitted provided that the
+# following conditions are met:
+# 
+#     (a) Redistributions of source code must retain this clause 1
+#         (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+#         (Licence Terms) and the above copyright notice.
+# 
+#     (b) Redistributions in binary form must reproduce the above
+#         copyright notice and the Licence Terms in the documentation and/or
+#         other materials provided with the distribution.
+# 
+#     (c) Redistributions in any form must be accompanied by information on
+#         how to obtain complete source code for:
+#        (i) the Software; and
+#        (ii) all accompanying software that uses (or is intended to
+#        use) the Software whether directly or indirectly.  Such source
+#        code must:
+#        (iii) either be included in the distribution or be available
+#        for no more than the cost of distribution plus a nominal fee;
+#        and
+#        (iv) be licensed by each relevant holder of copyright under
+#        either the Licence Terms (with an appropriate copyright notice)
+#        or the terms of a licence which is approved by the Open Source
+#        Initative.  For an executable file, "complete source code"
+#        means the source code for all modules it contains and includes
+#        associated build and other files reasonably required to produce
+#        the executable.
+# 
+# 2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+# LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+# IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+# EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+# THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+# BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+# PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+# THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+# 
+# 3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+Import("env", "cell", "args", "src_glob", "UserError", "conf", "get_bool_arg", "get_int_arg", "get_arg")
+
+import re, os, time
+import math
+
+# Check architecture exists
+arch = env.machine.arch
+platform = env.machine.platform
+cust = env.cust
+
+src_root = Dir('#').srcnode().abspath
+
+arch_path = os.path.join("arch", arch, args["package"])
+if not os.path.exists(os.path.join(src_root, arch_path)):
+    arch_path = os.path.join("cust", cust, arch_path)
+    if not os.path.exists(os.path.join(src_root, arch_path)):
+        print "architecture %s is not yet supported by nano." % (arch)
+arch_path = "#" + arch_path
+
+platform_path = os.path.join("platform", platform, args["package"])
+if not os.path.exists(os.path.join(src_root, platform_path)):
+    platform_path = os.path.join("cust", cust, platform_path)
+    if not os.path.exists(os.path.join(src_root, platform_path)):
+        print "platform %s is not yet supported by nano." % (platform)
+platform_path = "#" + platform_path
+
+provider = "Open Kernel Labs"
+
+#platform = env.machine.platform
+#platform_dir =  "#" + os.path.join("platform", platform, args["package"])
+
+#cpu = env.machine.cpu
+#if hasattr(env.machine, "arch_version"):
+#    arch_version = env.machine.arch_version
+
+wordsize = env.machine.wordsize
+
+#############################################################################
+# Setup SDK configuration options.
+#############################################################################
+if args.has_key("sdk"):
+    making_sdk = args["sdk"]
+else:
+    making_sdk = False
+
+if making_sdk:
+    kernel_type = args["kernel_type"]
+
+    if kernel_type == "production":
+        args["ENABLE_DEBUG"] = False
+        args["ENABLE_TRACEBUFFER"] = False
+        args["ENABLE_CONF_PERF"] = False
+    elif kernel_type == "benchmark":
+        args["ENABLE_DEBUG"] = False
+        args["ENABLE_TRACEBUFFER"] = False
+        args["ENABLE_CONF_PERF"] = True
+    elif kernel_type == "debug":
+        args["ENABLE_DEBUG"] = True
+        args["ENABLE_TRACEBUFFER"] = True
+        args["ENABLE_CONF_PERF"] = True
+    else:
+        print "Unknown kernel type %s" % kernel_type
+
+
+#############################################################################
+# Find all the src files
+#############################################################################
+
+special_objects = []
+
+# Generic top-level source
+src = ["src/*.c"]
+
+# Source files for most archs
+src += [ arch_path + "/src/*.c" ,
+         arch_path + "/src/*.S" ,
+         platform_path + "/src/*.S" ,
+         platform_path + "/src/*.c" ,
+         ]
+
+#if hasattr(env.machine, "arch_version"):
+#    src += [
+#        arch_path + "/v%s/src/*.cc" % (arch_version),
+#        arch_path + "/v%s/src/*.spp" % (arch_version),
+#        ]
+
+src = Flatten([src_glob(glob) for glob in src])
+kernel_src = src
+
+#############################################################################
+# Config defines
+#############################################################################
+
+cppdefines = [
+    ]
+
+# Machine configuration
+if env.machine.endian == "big":
+    cppdefines += [("CONFIG_BIGENDIAN", 1)]
+else:
+    cppdefines += [("CONFIG_LITTLEENDIAN", 1)]
+
+if env.machine.wordsize == 32:
+    cppdefines +=  [("CONFIG_IS_32BIT", 1)]
+elif env.machine.wordsize == 64:
+    cppdefines +=  [("CONFIG_IS_64BIT", 1)]
+else:
+    raise UserError, "Wordsize: %s is not support. Only 32 and 64-bit wordsize are supported." % env.machine.wordsize
+
+#############################################################################
+# Kernel Configuration
+#############################################################################
+
+# The defaults here are set up to match micro (pistachio).
+
+# Debug support
+if get_bool_arg(args, "ENABLE_DEBUG", True):
+    cppdefines += [("CONFIG_DEBUG", 1)]
+
+    # Tracebuffer support
+    if get_bool_arg(args, "ENABLE_TRACEBUFFER", True):
+        cppdefines += [("CONFIG_TRACEBUFFER", 1)]
+
+
+# Performance measurement support
+if get_bool_arg(args, "ENABLE_CONF_PERF", False):
+    cppdefines += [("CONFIG_PERF", 1)]
+
+
+# Tangled or untangled fastpaths?
+if not get_bool_arg(args, "USE_UNTANGLED_FASTPATH", False):
+    cppdefines +=[("CONFIG_USE_TANGLED_FASTPATH", 1)]
+
+#############################################################################
+# Include Path
+#############################################################################
+
+env.Append(CPPPATH = ["include"],
+           CPPDEFINES = cppdefines)
+
+paths = [("include/arch", "%s/include" % arch_path),
+         ("include/plat", "%s/include" % platform_path),
+         ]
+
+for dest_path, src_path in paths:
+    headers = src_glob(os.path.join(src_path, "*.h"))
+    headers += src_glob(os.path.join(src_path, "*.reg"))
+    headers += src_glob(os.path.join(src_path, "*.s"))
+    for header in headers:
+        dir, header_file = os.path.split(header)
+        env.Command(os.path.join(dest_path, header_file), os.path.join(src_path, header_file),
+                    Copy('$TARGET', '$SOURCE'))
+
+tcb_e = env.CppFile("tcb.reg.E", "src/tcb.reg")
+tcb_h = env.Command(["include/tcb.h", "include/tcb_offset.h", "tcb.py"],
+                    tcb_e,
+                    "tools/pyelf/regtool.py $SOURCE %s/object/nanokernel/include" % \
+                    str(Dir(env.builddir)))
+
+#############################################################################
+# Build the linkerscript
+#############################################################################
+linker_script_src = File(arch_path + "/linker.lds")
+linkscript = env.CppFile("lds.tmp", linker_script_src,
+                          CPPDEFINES=env.Extra( ["ASSEMBLY"]))
+
+#############################################################################
+# Build the kernel
+#############################################################################
+
+defines = env.scons_env["CPPDEFINES"][:]
+
+kern_phys_align = env.ALIGN_ELF
+kern_phys_addr = env.ADDR_ALLOC
+addressing = cell.Addressing(virt_addr = 0x0,
+                             phys_addr = kern_phys_addr)
+
+linkflags = env.toolchain.dict["LINKFLAGS"] + env.machine.link_flags
+ccflags = env.toolchain.dict["CCFLAGS"] + env.machine.c_flags
+
+# The entry point is in the platform library, so force the symbol
+# to be undefined to ensure that it is loaded.
+linkflags += ['-u',  '_start']
+
+abs_path = str(Dir(arch_path))
+file_name = os.path.join( abs_path,  "arch.scons")
+
+if os.path.exists(file_name):
+    execfile(file_name)
+else:
+    print "COULDN't find %s" % file_name
+
+obj = env.KengeProgram("nano",
+                       source = kernel_src,
+                       LINKSCRIPTS=linkscript,
+                       _LINKADDRESS = "",
+                       LINKFLAGS=linkflags,
+                       CCFLAGS=ccflags,
+                       )
+
+cell.set_kernel(obj, segments = None,
+                addressing = addressing)
+#cell.set_kernel_config(max_threads = max_threads)
+
+Return("obj")

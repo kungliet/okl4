@@ -1,0 +1,3 @@
+
+Size difference by segment in kernel: old 41056 Bytes, new 41024 Bytes
+

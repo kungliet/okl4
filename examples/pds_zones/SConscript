@@ -1,0 +1,19 @@
+#
+# @LICENCE("Public", "2007")@
+#
+
+Import("*")
+
+libs = ["l4", "l4e", "mutex", "atomic_ops", "c", "okl4"]
+
+try:
+    libs.append(args["serial_driver"])
+    libs.append("serial")
+except:
+    pass
+
+obj = env.KengeProgram("pds_zones", LIBS=libs)
+
+env.set_program(obj, heap = 0x100000)
+
+Return("obj")

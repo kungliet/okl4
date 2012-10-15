@@ -1,0 +1,239 @@
+#
+# Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+# All rights reserved.
+# 
+# 1. Redistribution and use of OKL4 (Software) in source and binary
+# forms, with or without modification, are permitted provided that the
+# following conditions are met:
+# 
+#     (a) Redistributions of source code must retain this clause 1
+#         (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+#         (Licence Terms) and the above copyright notice.
+# 
+#     (b) Redistributions in binary form must reproduce the above
+#         copyright notice and the Licence Terms in the documentation and/or
+#         other materials provided with the distribution.
+# 
+#     (c) Redistributions in any form must be accompanied by information on
+#         how to obtain complete source code for:
+#        (i) the Software; and
+#        (ii) all accompanying software that uses (or is intended to
+#        use) the Software whether directly or indirectly.  Such source
+#        code must:
+#        (iii) either be included in the distribution or be available
+#        for no more than the cost of distribution plus a nominal fee;
+#        and
+#        (iv) be licensed by each relevant holder of copyright under
+#        either the Licence Terms (with an appropriate copyright notice)
+#        or the terms of a licence which is approved by the Open Source
+#        Initative.  For an executable file, "complete source code"
+#        means the source code for all modules it contains and includes
+#        associated build and other files reasonably required to produce
+#        the executable.
+# 
+# 2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+# LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+# IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+# EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+# THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+# BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+# PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+# THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+# 
+# 3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+Import("*")
+
+import re
+import os.path
+import copy
+
+from math import ceil, log
+from SCons.Util import flatten
+import SCons
+
+from toolchains import gnu_arm_toolchain, rvct_gnu_toolchain
+
+# Make it easier to raise UserErrors
+import SCons.Errors
+UserError = SCons.Errors.UserError
+
+quote_pattern = re.compile(r"\\\"")
+
+kenge_env = env
+def WriteDefines(target, source, env):
+    out = open(str(target[0]), "w")
+    out.write("DEFINES=")
+    for entry in env["cppdefines"]:
+        if type(entry) == type(()):
+            s = quote_pattern.sub("\"", str(entry[1]))
+            out.write("-D" + entry[0] + "=" + str(s) + " ")
+        else:
+            out.write("-D" + entry + " ")
+    out.close()
+
+def WriteCXXFlags(target, source, env):
+    out = open(str(target[0]), "w")
+    out.write("CCFLAGS=")
+    if kenge_env.toolchain.dict.has_key('_CCFLAGS'):
+        out.write(env.subst(kenge_env.toolchain.dict['_CCFLAGS']) + " ")
+    else:
+        out.write(env.subst('$_CCFLAGS') + " ")
+
+    if kenge_env.toolchain.dict.has_key('CC_PLAT_FLAGS'):
+        out.write(env.subst(kenge_env.toolchain.dict['CC_PLAT_FLAGS']) + " ")
+    else:
+        out.write(env.subst('$CC_PLAT_FLAGS') + " ")
+
+    out.close()
+
+def WriteXML(target, source, env):
+    f = open(target[0].abspath, "w")
+    f.write(env["xml_elem"].toprettyxml())
+    f.close()
+
+
+# Base directory for the SDK tree.
+sdk_dir = os.path.join("soc", "kernel", env.machine.cpu)
+
+if env.toolchain.__class__ == rvct_gnu_toolchain.__class__:
+    is_gnu_toolchain = False
+
+    if env.toolchain.name != 'rvct_gnu':
+        raise UserError('rvct_toolchain cannot be used to build the SoC SDK, use rvct_gnu_toolchain')
+else:
+    is_gnu_toolchain = True
+
+for (config, l4kernel_o, platform_o, defines, linkscript, include, libs, _) in args['kernels']:
+    config_name = 'micro-' + config
+    inst_dir = os.path.join(sdk_dir, config_name, "object")
+    libs_dir = os.path.join(sdk_dir, config_name, "libs")
+    inc_dir  = os.path.join(sdk_dir, config_name, "include")
+
+    # Copy soc.o into place.
+    soc_copy = env.CopyFile(os.path.join(inst_dir, env.machine.platform + '.o'),
+                        platform_o)
+
+    dom = args['dom']
+    # Write out a machine.xml.
+    env.Command(os.path.join(inst_dir, 'machine.xml'), soc_copy,
+        Action(WriteXML, "[XML ] $TARGET"),
+        xml_elem = dom.getElementsByTagName('machine')[0])
+
+    # Copy kernel.o into place.
+    kernel_copy = env.CopyFile(os.path.join(inst_dir, env.machine.cpu + '.o'),
+                               l4kernel_o)
+
+    # Write out kernel.xml.
+    elem = None
+    for e in dom.getElementsByTagName('kernel'):
+        if e.getAttribute('file').find(config) != -1:
+            elem = copy.deepcopy(e)
+            break
+
+    # Change the kernel element so that it uses the 'sdk' sytnax
+    # as opposed to 'file' syntax to identify the kernel. We use a
+    # copy so as not to effect the real dom.
+    elem.removeAttribute('file')
+    elem.setAttribute('sdk', '../../../../')
+    elem.setAttribute('configuration', config_name)
+    elem.setAttribute('platform', env.machine.platform)
+    elem.setAttribute('physpool', 'physical')
+    elem.setAttribute('virtpool', 'virtual')
+
+    env.Command(os.path.join(inst_dir, 'kernel.xml'), kernel_copy,
+                Action(WriteXML, "[XML ] $TARGET"), xml_elem = elem)
+
+    env.Command(os.path.join(inst_dir, 'defines'),
+                None, Action(WriteDefines),
+                cppdefines = defines)
+
+    linker_script_name = 'linker.lds'
+    env.CopyFile(os.path.join(inst_dir, linker_script_name),
+                 linkscript)
+
+    env.Command(os.path.join(inst_dir, 'ccflags'),
+                None, Action(WriteCXXFlags))
+
+    for lib in libs:
+        env.scons_env.Install(libs_dir, lib)
+
+    # Copy over the include directory
+    if args.has_key('include'):
+        inc = args['include']
+    else:
+        inc = None
+
+    env.CopySConsTree(inc_dir, include)
+
+    linker_sed_subs = {
+        '@LINKER@'             : '$_LINK',
+        '@LINKER_SCRIPT_FLAG@' : '$LINK_SCRIPT_PREFIX',
+        '@LINKER_FLAGS@'       : '$LINKFLAGS -u _start'
+    }
+
+    if is_gnu_toolchain:
+        linker_sed_subs['@TOOLPREFIX@'] = '$TOOLPREFIX'
+    else:
+        linker_sed_subs['@TOOLPREFIX@'] = args['rvct_prefix']
+
+    lsh = env.KengeSed(os.path.join(inst_dir, 'linker.sh'),
+                       "linker.sh.in", linker_sed_subs)
+    env.scons_env.AddPostAction(lsh, Chmod('$TARGET', 0755))
+
+# Copy sample platform code into doc/example
+example_dir = os.path.join(sdk_dir, "soc", "%s" % env.machine.platform)
+example_copies = env.CopySConsTree(example_dir, args['plat_dir'])
+
+# Write out machine.xml.in to examples.
+env.Command(os.path.join(example_dir, 'machine.xml.in'), example_copies,
+            Action(WriteXML, "[XML ] $TARGET"),
+            xml_elem = dom.getElementsByTagName('machine')[0])
+
+# Copy our platform Makefile
+env.scons_env['CPU'] = env.machine.cpu
+env.scons_env['PLATFORM'] = env.machine.platform
+
+makefile_sed_subs = {
+    '@PLATFORM@'    : '$PLATFORM',
+    '@CPU@'         : '$CPU',
+    '@CC@'          : '$_CC',
+    '@AS@'          : '$_AS',
+    '@LINK@'        : '$_LINK',
+    '@ASFLAGS@'     : '$ASFLAGS',
+    '@LDFLAGS@'     : '$LINKFLAGS',
+    '@RELOC@'       : '$RELOCATION_OPT',
+    '@LINK_PREFIX@' : '$LINK_SCRIPT_PREFIX'
+}
+
+if is_gnu_toolchain:
+    makefile_sed_subs['@TOOLPREFIX@'] = '$TOOLPREFIX'
+    makefile_sed_subs['@ASDEFINES@'] = '-DASSEMBLY'
+    makefile_sed_subs['@ASCOMPILE@'] = "\$\(CC) \$\(ASFLAGS) \$\(INCLUDES) \$\(ASDEFINES) -c $< -o $@"
+    makefile_sed_subs['@SEARCHDIRS@'] = 'src kdb'
+else:
+    makefile_sed_subs['@TOOLPREFIX@'] = args['rvct_prefix']
+    makefile_sed_subs['@ASDEFINES@'] = '-DASSEMBLY -D__ASSEMBLY__ -U__GNUC__ -D__RVCT_GNU__'
+    makefile_sed_subs['@ASCOMPILE@'] = '\$\(CC) \$\(ASFLAGS) \$\(INCLUDES) \$\(ASDEFINES) $< -E -o $@.s \&\& \$\(AS) \$\(ASFLAGS) $@.s -o $@'
+    makefile_sed_subs['@SEARCHDIRS@'] = 'src src/rvct kdb'
+
+env.KengeSed(os.path.join(example_dir, 'Makefile'), "Makefile.in", makefile_sed_subs)
+
+# Finally tarball the whole lot
+obj = env.KengeTarball("soc-sdk-%s.tar.gz" % env.machine.cpu, "soc")
+
+Return("obj")

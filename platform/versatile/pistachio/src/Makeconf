@@ -1,0 +1,1 @@
+SOURCES += $(addprefix src/platform/$(PLATFORM)/, timer.cc irq.cc plat.cc )

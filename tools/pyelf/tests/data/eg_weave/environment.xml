@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!DOCTYPE image SYSTEM "weaver-2.0.dtd">
+<image>
+	<machine file="data/eg_weave/machine.xml">
+	</machine>
+	<virtual_pool name="virtual">
+		<memory base="0x1000" size="0xcffff000"/>
+	</virtual_pool>
+
+	<physical_pool name="large">
+		<memory base="0xa0000000" size="0x3000000"/>
+	</physical_pool>
+
+	<physical_pool name="physical">
+		<memory base="0xa3000000" size="0x1000000"/>
+	</physical_pool>
+
+	<kernel file="data/eg_weave/l4kernel" virtpool="virtual" physpool="physical">
+	</kernel>
+
+	<iguana name="iguana_server" file="data/eg_weave/ig_server" kernel_heap="2M">
+		<pd name="the_pd" >
+			<memsection name="make_dynamically" size="16K" attach="rwx" />
+			<!-- Test the parsing of the zero attribute -->
+			<memsection name="make_dynamically2" size="16K" attach="rwx" zero="false"/>
+			<!-- Test the parsing of custom caps. -->
+			<memsection name="custom_cap" size="16K" attach="wx">
+				<cap name="odd" >
+					<right value="read" />
+					<right value="execute" />
+				</cap>
+			</memsection>
+			<environment>
+				<entry key="Custom" cap="/iguana_server/ig_naming/forward_ref/rw" attach="rw" />
+			</environment>
+		</pd>
+		<program name="ig_naming" file="data/eg_weave/ig_naming" physpool="large">
+			<memsection name="forward_ref" size="16K" />
+			<environment>
+				<entry key="A Key" cap="/iguana_server/the_pd/make_dynamically" attach="rw" />
+				<entry key="Custom" cap="/iguana_server/the_pd/custom_cap/odd" attach="wx" />
+				<entry key="AVALUE" value="42" />
+			</environment>
+		</program>
+	</iguana>
+</image>
+

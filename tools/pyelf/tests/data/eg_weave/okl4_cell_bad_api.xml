@@ -1,0 +1,119 @@
+<?xml version="1.0" ?>
+<!DOCTYPE image
+  SYSTEM 'weaver-2.0.dtd'>
+<image>
+	<machine>
+		<cpu name="xscale"/>
+		<word_size size="0x20"/>
+		<virtual_memory name="virtual">
+			<region base="0x80000000" size="0x50000000"/>
+		</virtual_memory>
+		<physical_memory name="sdram">
+			<region base="0x5c000000" size="0x40000" rights="all"/>
+		</physical_memory>
+		<physical_memory name="rom">
+			<region base="0xa3800000" size="0x800000"/>
+		</physical_memory>
+		<physical_memory name="physical">
+			<region base="0xa0000000" size="0x3800000"/>
+		</physical_memory>
+		<physical_memory name="pcmcia_cf_slot_1">
+			<region base="0x30000000" size="0x10000000"/>
+		</physical_memory>
+		<physical_memory name="pcmcia_cf_slot_0">
+			<region base="0x20000000" size="0x10000000"/>
+		</physical_memory>
+		<phys_device name="timer_dev">
+			<physical_memory name="timer_mem0">
+				<region base="0x40a00000" size="0x1000"/>
+			</physical_memory>
+			<interrupt name="int_timer0" number="27"/>
+			<interrupt name="int_timer1" number="28"/>
+		</phys_device>
+		<phys_device name="serial_dev">
+			<physical_memory name="serial_mem0">
+                <region base="0x40100000" size="0x1000" cache_policy="uncached"/>
+                <region base="0x40101000" size="0x1000"/>
+                <region base="0x40102000" size="0x1000"/>
+            </physical_memory>
+            <physical_memory name="serial_mem1">
+                <region base="0x40103000" size="0x1000"/>
+            </physical_memory>
+			<interrupt name="int_serial0" number="22"/>
+		</phys_device>
+		<phys_device name="rtc_dev">
+			<physical_memory name="rtc_mem0">
+				<region base="0x40900000" size="0x1000"/>
+			</physical_memory>
+			<interrupt name="int_rtc0" number="31"/>
+		</phys_device>
+		<page_size size="0x1000"/>
+		<page_size size="0x10000"/>
+		<page_size size="0x100000"/>
+	</machine>
+	<physical_pool direct="true" name="sdram">
+		<memory src="sdram"/>
+	</physical_pool>
+	<physical_pool direct="true" name="rom">
+		<memory src="rom"/>
+	</physical_pool>
+	<virtual_pool name="virtual">
+		<memory src="virtual"/>
+	</virtual_pool>
+	<physical_pool direct="true" name="physical">
+		<memory src="physical"/>
+	</physical_pool>
+	<physical_pool direct="true" name="pcmcia_cf_slot_1">
+		<memory src="pcmcia_cf_slot_1"/>
+	</physical_pool>
+	<physical_pool direct="true" name="pcmcia_cf_slot_0">
+		<memory src="pcmcia_cf_slot_0"/>
+	</physical_pool>
+    <kernel file="data/eg_weave/l4kernel" physpool="physical" virtpool="virtual">
+		<config>
+			<option key="threads" value="1024"/>
+		</config>
+	</kernel>
+    <okl4 priority="100" clists="256" file="data/eg_weave/ig_server_bad_api" kernel_heap="0x200000" mutexes="256" name="ktest" spaces="256" platform_control="True">
+        <mutex name="cell_mutex"/>
+        <environment>
+            <entry key="test_key" value="42"/>
+            <entry key="my_mutex" cap="test_space/test_space_mutex1" />
+            <entry key="my_memory" cap="normal" />
+            <entry key="my_memory_phys" cap="normal/physical" />
+            <entry key="my_heap_phys" cap="heap/physical" />
+            <entry key="some_text" cap="rx" />
+            <entry key="some_data" cap="rw" attach="rw" />
+            <entry key="my_memory2" cap="test_space/normal2" />
+            <entry key="other_thread" cap="/second_cell/main" />
+        </environment>
+		<memsection cache_policy="uncached" name="serial_vaddr" phys_addr="0x40100000" size="0x1000" />
+        <memsection mem_type="unmapped" name="ktest_segment" size="0x4000" />
+        <memsection name="normal" size="0x4000" />
+        <space name="test_space">
+            <mutex name="test_space_mutex1"/>
+            <mutex name="test_space_mutex2"/>
+            <memsection name="normal2" size="0x4000" />
+        </space>
+        <space name="thread_space">
+            <thread name="test_thread" start="_entry"/>
+        </space>
+        <irq value="825"/>
+        <heap size="0x100000"/>
+        <thread name="second_main_thread" start="_start"/>
+        <use_device name="serial_dev"/>
+        <commandline>
+            <arg value="ktest"/>
+            <arg value="42"/>
+            <arg value="arg with space"/>
+        </commandline>
+	</okl4>
+        <okl4 clists="0" file="data/eg_weave/second_cell" kernel_heap="0x200000" mutexes="0" name="second_cell" spaces="5">
+            <heap size="0x100000"/>
+            <environment>
+              <entry key="test_mutex" cap="/ktest/test_space/test_space_mutex1"/>
+            <entry key="their_memory" cap="/ktest/normal" />
+        </environment>
+        </okl4>
+
+</image>

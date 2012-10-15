@@ -1,0 +1,405 @@
+#####################################################################
+# Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+# All rights reserved.
+# 
+# 1. Redistribution and use of OKL4 (Software) in source and binary
+# forms, with or without modification, are permitted provided that the
+# following conditions are met:
+# 
+#     (a) Redistributions of source code must retain this clause 1
+#         (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+#         (Licence Terms) and the above copyright notice.
+# 
+#     (b) Redistributions in binary form must reproduce the above
+#         copyright notice and the Licence Terms in the documentation and/or
+#         other materials provided with the distribution.
+# 
+#     (c) Redistributions in any form must be accompanied by information on
+#         how to obtain complete source code for:
+#        (i) the Software; and
+#        (ii) all accompanying software that uses (or is intended to
+#        use) the Software whether directly or indirectly.  Such source
+#        code must:
+#        (iii) either be included in the distribution or be available
+#        for no more than the cost of distribution plus a nominal fee;
+#        and
+#        (iv) be licensed by each relevant holder of copyright under
+#        either the Licence Terms (with an appropriate copyright notice)
+#        or the terms of a licence which is approved by the Open Source
+#        Initative.  For an executable file, "complete source code"
+#        means the source code for all modules it contains and includes
+#        associated build and other files reasonably required to produce
+#        the executable.
+# 
+# 2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+# LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+# IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+# EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+# THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+# BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+# PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+# THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+# 
+# 3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#####################################################################
+
+from linux_cell import LinuxCell
+from opts import get_int_arg, get_bool_arg, get_arg, get_option_arg, get_rtos_example_args
+import distutils
+from distutils import dir_util, file_util
+from distutils.dir_util import copy_tree
+import os
+
+Import('*')
+
+#machine = build.machine
+
+# Maximum number of ELF segments supported in an image.
+MAX_ELF_SEGMENTS = 1000
+
+#############################################################################
+## Build L4test
+#############################################################################
+rootserver_env = build.KengeCell(LinuxCell, name = 'oklinux')
+
+if rootserver_env.toolchain.type == "gnu":
+    rootserver_env.scons_env["CC_OPTIMISATIONS"] = "s"
+rootserver_env.Append(CPPDEFINES=[('MAX_ELF_SEGMENTS', MAX_ELF_SEGMENTS)])
+
+rootserver_env.process_global_config()
+
+if rootserver_env.toolchain.type in ["ads", "rvct"]:
+    rootserver_env.Package("libs/rvct", buildname="c", filesystem="null")
+else:
+    rootserver_env.Package("libs/c", filesystem="null")
+    rootserver_env.Package("libs/gcc")
+rootserver_env.Package("libs/compat")
+
+rootserver_env.Package("libs/bit_fl")
+rootserver_env.Package("libs/circular_buffer")
+rootserver_env.Package("libs/hash")
+rootserver_env.Package("libs/ll")
+rootserver_env.Package("libs/queue")
+rootserver_env.Package("libs/range_fl")
+
+rootserver_env.Package("libs/mutex")
+rootserver_env.Package("libs/atomic_ops")
+rootserver_env.Package("libs/util")
+rootserver_env.Package("libs/check")
+
+rootserver_env.Package("libs/l4")
+rootserver_env.Package("libs/l4e")
+rootserver_env.Package("libs/bootinfo")
+
+rootserver_env.Package("libs/okl4")
+
+rootserver_env.add_use_device(None, ["serial_dev"])
+rootserver_env.add_use_device(None, ["timer_dev"])
+if rootserver_env.machine.__name__ in ["versatile", "versatile_uboot"]:
+    rootserver_env.add_use_device(None, ["eth_dev"])
+    rootserver_env.add_use_device(None, ["versatilesys_dev"])
+    rootserver_env.add_use_device(None, ["clcd_dev"])
+    rootserver_env.add_use_device(None, ["kmi0_dev"])
+    rootserver_env.add_use_device(None, ["kmi1_dev"])
+if rootserver_env.machine.__name__ == "kzm_arm11":
+    rootserver_env.add_use_device(None, ["dma_dev"])
+
+dma_segment_size = 0x200000
+vmalloc_segment_size = 0x200000
+if rootserver_env.machine.__name__ == "nhk15":
+    dma_segment_size = 0x400000
+
+
+addressing = rootserver_env.Addressing(
+                                      cache_policy = "strong",
+                                      align = dma_segment_size
+                                      )
+dma_segment = rootserver_env.Memsection("dma_heap_segment", size = dma_segment_size,
+                                           mem_type = "virtual", attach="rwx", addressing = addressing)
+#Add physical memory of heap to environment, which is required by dma-mapping code.
+rootserver_env.env_append(None, "heap_physical", cap="heap/physical")
+
+vmalloc_segment = rootserver_env.Memsection("vmalloc", size = vmalloc_segment_size, mem_type = "virtual", attach="rwx")
+rootserver_env.add_memsections(None, [dma_segment, vmalloc_segment])
+
+if rootserver_env.machine.__name__ == "gumstix":
+    rootserver_env.add_use_device(None, ["dma_dev"])
+    rootserver_env.add_use_device(None, ["gpio_dev"])
+    rootserver_env.add_use_device(None, ["cs_dev"])
+    #Add physical memory of CS1, CS2, which is requried by ethernet driver.
+    rootserver_env.env_append(None, "cs_mem1_physical", cap="cs_mem1/physical")
+    rootserver_env.env_append(None, "cs_mem2_physical", cap="cs_mem2/physical")
+
+if rootserver_env.machine.__name__ == "nhk15":
+    rootserver_env.add_use_device(None, ["dma_dev"])
+    rootserver_env.add_use_device(None, ["gpio_dev"])
+    rootserver_env.add_use_device(None, ["sdi_dev"])
+    rootserver_env.add_use_device(None, ["i2c_dev"])
+    rootserver_env.add_use_device(None, ["msp_dev"])
+    rootserver_env.add_use_device(None, ["sga_dev"])
+    rootserver_env.add_use_device(None, ["clcd_dev"])
+    rootserver_env.add_use_device(None, ["net_dev"])
+
+# Where is OK Linux installed?
+oklinux_dir = get_arg(build, 'OKLINUX_DIR', 'linux')
+
+# The convention is that relative paths are relative to the top of the
+# source tree, but cwd is cell/iguana.  The best solution is to turn
+# the path into an absolute path.
+if not os.path.isabs(oklinux_dir):
+    oklinux_dir = os.path.abspath(os.path.join('..', '..', oklinux_dir))
+
+rootserver_env.max_elf_segments = MAX_ELF_SEGMENTS
+
+################## Linux ##############################################
+
+assert os.path.exists(oklinux_dir), "OKLINUX_DIR: %s: does not exist" % oklinux_dir
+
+# Build liboklinux
+[lib, libs, oklinux_config] = rootserver_env.Package("libs/oklinux")
+print "OK Linux library dependencies: %s" % oklinux_config["libs"]
+oklinux_config["okl4fs"] = False
+print "build okl4fs? %s" % oklinux_config["okl4fs"]
+
+#############################################################################
+## Customised root filesystem
+#############################################################################
+
+extern_rootfs = get_arg(build, 'LINUX_ROOTFS', None)
+
+if extern_rootfs:
+    rootfs_path = Dir(extern_rootfs).abspath
+    if extern_rootfs != "none" and not os.path.exists(rootfs_path) :
+        raise UserError, "%s is not a valid path" % rootfs_path
+
+Export('extern_rootfs')
+
+rootfs_size = get_int_arg(build, 'LINUX_ROOTFS_SIZE', 0)
+if not rootfs_size:
+    rootfs_size = None
+
+Export('rootfs_size')
+
+def getpathsize(path):
+    f = os.popen("du -s %s" % path)
+    l = f.readline().split()[0]
+    return int(l)
+
+#############################################################################
+## Linux Apps
+#############################################################################
+linux_apps = [app for app in os.listdir(os.path.join(oklinux_dir, 'apps')) if
+                (not app.startswith(".") and (app != 'busybox'))] + [None]
+
+extra_linux_apps = get_option_arg(build, 'LINUX_APPS', None, linux_apps, True)
+Export('extra_linux_apps')
+
+run_gstreamertest = False
+Export('run_gstreamertest')
+
+run_bench = False
+Export('run_bench')
+
+ltp_set = get_arg(build, 'LTP_SET', 'all')
+Export('ltp_set')
+
+oklinux_tests = get_bool_arg(build, "OKLINUX_TESTS", False)
+Export('oklinux_tests');
+
+linux_env = build.KengeEnvironment("linux", LINKCOM="$UNADORNED_LINKCOM", OKLINUX_DIR=oklinux_dir)
+linux_env.process_global_config()
+
+kernel_version = "2.6.24-v2"
+
+wombat,modules = rootserver_env.Package(os.path.join(oklinux_dir, "kernel-%s" % kernel_version),
+                                kernel_version=kernel_version,
+                                oklinux_config=oklinux_config) #, vserial_obj = None)
+
+# Clean the ramdisk contents if it exists
+inst_dir = Dir(linux_env.builddir + "/install").abspath
+if os.path.exists(inst_dir):
+    distutils.dir_util.remove_tree(inst_dir)
+
+build.expect_test_data = []
+
+# Create an external rootfs if supplied, otherwise create default rootfs
+if extern_rootfs == "none":
+
+    # error if rootfs_size is defined
+    if rootfs_size:
+        raise UserError, "Don't define the rootfs size if you're not using one!"
+
+    # skip all the filesystem code below!
+    rootfs_path = None
+
+else:
+    paths_size = 0
+
+    if extern_rootfs:
+        #
+        # Use customised rootfs
+        #
+        print "Installing root filesystem from %s" % rootfs_path
+        distutils.dir_util.copy_tree(rootfs_path, inst_dir, preserve_symlinks=True)
+
+        # Don't allow linux applications to be bundled together
+        assert extra_linux_apps is None, "Can't bundle extra Linux apps when using external rootfs"
+
+        paths_size += getpathsize(extern_rootfs)
+        rootfs = None
+
+    else:
+        #
+        # Use default rootfs
+        #
+        rootfs = linux_env.Package(os.path.join(oklinux_dir, "rootfs-%s" % kernel_version))
+
+        paths_size = 4000
+
+        if extra_linux_apps is not None:
+            if 'lmbench' in extra_linux_apps:
+                paths_size += 4500
+            if 'ltp' in extra_linux_apps:
+                if ltp_set == 'all':
+                    paths_size += 20500
+                else:
+                    paths_size += 10000
+
+            for app in extra_linux_apps:
+                extra = linux_env.Package(os.path.join(oklinux_dir, 'apps', app))
+                linux_env.Depends(extra, rootfs)
+
+    # Common code path
+
+    # Always include BusyBox
+    busybox = linux_env.Package(os.path.join(oklinux_dir, "apps", "busybox"))
+
+    if rootfs is not None:
+        linux_env.Depends(busybox, rootfs)
+
+    if rootfs is not None:
+        linux_env.scons_env.AddPostAction(wombat, modules)
+
+    if rootfs_size is None:
+        disk_size = int(paths_size * 1.4)
+
+    else:
+        if rootfs_size < paths_size:
+            raise UserError, \
+                "Suggested filesystem image size of %s is insufficient for " \
+                "rootfs at %s, which is %s blocks in size" \
+                % (rootfs_size, rootfs_path, paths_size)
+        else:
+            disk_size = rootfs_size
+
+    print "disk_size is %s" % disk_size
+
+    ###################################
+    ## Customised device file system
+    ###################################
+#        if ext_devfs_file:
+#            #
+#            # Use custom device description file
+#            #
+#            devfs_file_path = File(ext_devfs_file).abspath
+#            if not os.path.exists(devfs_file_path):
+#                raise UserError, "%s does not exist" % devfs_file_path
+#            devfs_file = ext_devfs_file
+#
+#        else:
+#            #
+#            # Use default device description file
+#            #
+
+    devfs_file = os.path.join(oklinux_dir, "rootfs-%s" % kernel_version, "dev.txt")
+
+    fs = linux_env.Ext2FS(disk_size, devfs_file)
+    if rootfs is not None:
+        linux_env.Depends(wombat, rootfs)
+        linux_env.scons_env.Depends(fs, wombat)
+        rootserver_env.add_file(wombat, fs, 'rootfs')
+        rootserver_env.apps.append(fs)
+
+# endif extern_rootfs is "none"
+
+# vmalloc area.  Must be within 23-bits of wombat.
+#ig_serv_env.add_memsection(wombat, name = 'vmalloc',
+#                           size = 4 * 1024 * 1024)
+#
+#if getattr(linux_env.machine, "linux_vga", False):
+#    addressing = linux_env.Addressing(physpool='vga',
+#                                      virt_addr = 0xa0000,
+#                                      cache_policy = "uncached"
+#                                      )
+#    cell.add_memsection(wombat, name = 'vga', size = 0x20000,
+#                        addressing = addressing)
+#
+#if example_cmd_line:
+#    for example in example_cmd_line:
+#        if example == "intervm" or example == "gstreamer_ogg2avi":
+#            ig_serv_env.env_append(wombat, key ='INTERVM_CTL',
+#                                   attach = 'rw',
+#                                   cap = "/%s/%s/intervm_ctl" % \
+#                                   (ig_serv_env.name, example))
+#
+#            ig_serv_env.env_append(wombat,  key = 'INTERVM_FWD',
+#                                   attach = 'rw',
+#                                   cap = "/%s/%s/intervm_fwd" % \
+#                                   (ig_serv_env.name, example))
+#            ig_serv_env.env_append(wombat,  key = 'INTERVM_BWD',
+#                                   attach = 'rw',
+#                                   cap = "/%s/%s/intervm_bwd" % \
+#                                   (ig_serv_env.name, example))
+
+#ig_serv_env.layout_devices()
+
+rootserver_env.set_cell_config(spaces = 256, clists = 256, mutexes = 256)
+
+build.expect_test_data = []
+
+build.expect_test_data.append( ("Linux user startup!", None) )
+
+if extra_linux_apps is not None:
+    if 'ltp' in extra_linux_apps:
+        build.expect_test_data.append( ("</ltp>", None) )
+    elif 'lmbench' in extra_linux_apps:
+        build.expect_test_data.append( ("</lmbench>", None) )
+    elif 'disktest' in extra_linux_apps:
+        build.expect_test_data.append( ("/ #", "sh /disktest/disktest.sh") )
+	build.expect_test_data.append( ("disktest completed... exiting", None) )
+else:
+    if oklinux_tests == True:
+        build.expect_test_data.append( ("Finished running OKLinux Tests!", None) )
+        build.expect_test_data.append( ("All tests PASSED! :\)", None) )
+
+    #just check we got a prompt if not running ltp or lmbench
+    build.expect_test_data.append( ("Please press Enter to activate this console.", "\n") )
+    build.expect_test_data.append( ("/ #", "uname -a") )
+
+# Rootfs unit tests
+if extern_rootfs == "none":
+    build.expect_test_data = [("Assertion failed", None)]
+
+if run_gstreamertest == True:
+    build.expect_test_data = [("GStreamer test result: pass", None)]
+
+if rootfs_size is not None:
+    build.expect_test_data = [("Linux user startup!", None),
+                            ("Please press Enter to activate this console.", "\n"),
+                            ("/ #", "/usr/bin/check_rootfs_size.sh 8000"),
+                            ("True", None)]
+
+Return("rootserver_env")

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE image SYSTEM "weaver-2.0.dtd">
+<image>
+        <include file="data/eg_weave/machine_and_pools.xml" />
+
+	<kernel file="data/eg_weave/l4kernel" virtpool="virtual" physpool="physical">
+	</kernel>
+
+	<iguana name="iguana_server" file="data/eg_weave/ig_server" kernel_heap="2M">
+        <program name="ig_naming" file="data/eg_weave/ig_naming">
+		</program>
+	</iguana>
+</image>

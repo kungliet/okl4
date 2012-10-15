@@ -1,0 +1,122 @@
+/******************************************************************************
+ *  General options
+ *****************************************************************************/
+
++fdi /* Unix convention for include path. */
++fll /* Enable use of "long long". */
+-passes(2)
+-t4  /* Tabs of size 4. */
+
+/******************************************************************************
+ *  Warning level settings
+ *****************************************************************************/
+-w3
+-u
+
+/******************************************************************************
+ *  Output settings
+ *****************************************************************************/
+-b                                      /* Suppress the banner. */
+-h1                                     /* One-line error messages. */
+-format=lint:%(%f:%l:%c\s%)%t\s%n:\s%m  /* Make output more compact. */
+-width(0,0)                             /* Do not break long lines. */
+
+/******************************************************************************
+ *  Path Setup
+ *****************************************************************************/
+
++libclass(angle)
+-libh(okl4\*)
+-wlib(0)
+
+/******************************************************************************
+ *  Warning Configuration
+ *****************************************************************************/
+
+-d__asm__=_to_semi                      /* Eat up __asm__ */
++rw(_to_semi)                           /* Activate magic for __asm__ */
++rw(__asm__)
++rw(__volatile__)                       // Allow __volatile__
+
+/* Allow functions to remain unreferenced, which we allow because of our
+ * excesive static inline stuff. */
+-e528
+
+/* We are happy to have repeated includes */
+-e537
+
+/* Treat these functions like "assert", assuming that execution halts if the
+ * first argument is false. */
+-function(__assert, _fail_unless)
+
+/* Expect these functions to be unreachable and never return. */
+-function(exit, __assert)
+-function(exit, L4_WaitForever)
+
+/* Allow return values of these functions to be ignored. */
+-esym(534, printf)
+-esym(534, memcpy)
+-esym(534, strcpy)
+-esym(534, memset)
+-esym(534, memmove)
+-esym(534, fflush)
+-esym(534, fclose)
+-esym(534, snprintf)
+-esym(534, vsnprintf)
+-esym(534, fprintf)
+-esym(534, vfprintf)
+-esym(534, strncpy)
+
+-esym(534, okl4_atomic_set)
+-esym(534, L4_WaitForever)
+
+/* Overrides. */
+-e708 /* Allow unions to be initialised. */
+-e717 /* Allow "do { ... } while (0)". */
+-e730 /* Allow boolean parameters to functions. */
+-e740 /* We assume that a char* pointer is no different to a void* pointer. */
+-e747 /* Allow prototype coercion. */
+-e801 /* Goto is AOK with me */
++e910 /* Do not allow '0' to be used as NULL. */
++e936 /* Do not support K&R-style function definitions. */
++e937 /* Do not support K&R-style function definitions. */
++e938 /* Do not support K&R-style parameter definitions. */
++e939 /* Do not support K&R-style typeless functions. */
++e941 /* Warn about constants folding to 0. */
++e973 /* Force bracketing around negative values in "#define X (-1)". */
+//-e785 /* Allow struct initialisers "{0, 0, ...}" to have different number of items than the struct has. */
+//+e909 /* Do not allow integers to be treated as bools. */
+
+/* Miscellaneous MISRA Rules. */
++e960
+-esym(960,33) /* Allow side effects on RHS of binary operator. */
+-esym(960,69) /* Allow varargs. */
+-esym(960,110) /* Allow bitfields inside a union. */
+-esym(960,98) /* Allow preprocessor "#/##" usage. */
+-esym(960,57,58) /* Allow continue/break to be used. (?!) */
+//-esym(960,32) /* enum declaration */
+
+/* Miscellaneous MISRA Warnings. */
++e961
+-esym(961,47) /* Allow programmeres to rely on precedence. */
+-esym(961,92) /* Allow "#undef". */
+-esym(961,55) /* Allow labels. */
+
+/* LibOKL4-Specific. */
+//+e956 /* Do not allow global variables. */
+
+
+/******************************************************************************
+ *  Exclusions to Reconsider
+ *****************************************************************************/
+-e506 /* Allow constant bools. */
+-e715 /* Don't worry about function parameters not being used. We may be following an API. */
+-e716 /* Allow "while (1) { ... }" */
+-e818 /* Don't worry about pointers that could potentially be 'const'. */
+
+/******************************************************************************
+ *  Exclusions
+ *****************************************************************************/
+
+-esym(665,BITFIELD2) /* The bitfield macros mess around with macros. */
+

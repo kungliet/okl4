@@ -1,0 +1,30 @@
+/************************************************************************/
+word_t r0
+word_t r1
+word_t r2
+word_t r3
+word_t r4
+word_t r5
+word_t r6
+word_t r7
+/************************************************************************/
+word_t r8
+word_t r9
+word_t r10
+word_t r11
+word_t r12, word_t ip
+word_t r13, word_t sp
+word_t r14, word_t lr
+word_t r15, word_t pc
+/************************************************************************/
+word_t cpsr
+word_t full_context_saved // Consider removing on ARM
+
+// pad out to next cacheline
+word_t arch_padding_0
+word_t arch_padding_1
+word_t arch_padding_2
+word_t arch_padding_3
+word_t arch_padding_4
+word_t arch_padding_5
+/************************************************************************/

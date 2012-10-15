@@ -1,0 +1,27 @@
+#
+# @LICENCE("Public", "2008")@
+#
+
+Import("*")
+
+libs = ["atomic_ops", "c", "okl4", "l4", "mutex"]
+
+try:
+    if args["serial_driver"]:
+        libs.append(args["serial_driver"])
+        libs.append("serial")
+        #env.Append(CPPDEFINES=[("SERIAL_DRIVER", args["serial_driver"])])
+except:
+    pass
+
+print env.kernel
+ms = env.Memsection("shmem", None, 0x1000, "rw")
+env.add_memsections(None, [ms])
+
+env.Append(CPPDEFINES=[("DECRYPT_MASK", 0x34)])
+
+obj = env.KengeProgram("decrypt", LIBS=libs)
+
+env.set_program(obj, heap=0x100000)
+
+Return("obj")

@@ -1,0 +1,121 @@
+====================
+OKL4 SDK Release 3.0
+====================
+Released: October 2008
+
+Introduction
+=============
+
+OKL4 is built using cutting-edge microkernel technology, which
+provides trustworthy virtualization and secure decomposition
+capabilities for embedded systems. OKL4 supports system
+virtualization, secure execution of components in an execution
+environment with a minimal trusted computing base and fault isolation
+within complex systems using lightweight protected components.
+
+This SDK provides the mechanisms for developing platform SoC support
+for the OKL4 kernel and and for developing cells that run on top of
+the OKL4 kernel.
+
+
+Supported Target Platforms and Architectures
+============================================
+
+This release supports the following development platforms:
+
+### ARMv5 Architecture
+
+ * Gumstix - a pxa250 SoC with an ARMv5 based XScale CPU core.
+
+ * Versatile -the ARM Versatile Platform Baseboard for the ARM926EJ-S 
+              development chip.
+
+ * GTA01 - the Open Moko hardware base around the s3c2410 SoC. NOTE:
+           this is actually an ARMv4 architecture, but the OKL4 kernel
+           currently treats ARMv4 as ARMv5.
+
+### ARMv6 Architecture
+
+ * KZM - an i.MX31 SoC with an ARMv6 based ARM1136 CPU core.
+
+### Hardware Simulation
+
+In addition to the hardware platforms listed above, software
+simulation of the Gumstix platform is also supported.
+
+
+Getting Started
+===============
+
+Everything you need to get started using the SDK can be found on the 
+OK Developer wiki:
+
+http://wiki.ok-labs.com/Release/3.0
+
+
+Building Examples
+=================
+
+Several OKL4 examples can be found in the directory 
+okl4/<arch>/examples, these are:
+
+args - Print the program's command line arguments.
+
+singlecell - A single cell that prints 'Hello, world!'
+
+multicell - A multiple cell example in which one cell (echo) prints
+messages sent to it from another cell (chatterbox).
+
+decrypt - A Caesar cipher server that is part of a larger example
+demonstrating communication between linux apps and other cells.
+
+pingpong - A single cell example that sends messages between
+  multiple threads.
+
+sample - Sample project framework for users to start developing their
+  own cells.
+
+Examples can be built with the following commands:
+
+$ export OKL4_SDK_ROOT=<path/to/sdk>
+$ cd okl4/<arch>/examples/<example>
+$ make
+
+The tutorial and the developer wiki have more information on building
+and running images.
+
+
+SDK Structure
+=============
+
+kernel/<arch>/{micro,nano}-{production,debug,benchmark}
+                             Kernel SDK for different configurations
+kernel/<arch>/soc/<platform> Sample SoC platform code.
+
+okl4/<arch>/{micro,nano}-{production,debug}
+                             OKL4 SDK for different configurations
+okl4/<arch>/examples         Example code.
+
+
+Obtaining the Source
+====================
+
+This SDK is the supported method of developing on OKL4.  The source code 
+for this release can be downloaded from http://wiki.ok-labs.com/Release/3.0
+
+
+Getting Help
+============
+
+There is an active and responsive mailing list for the OKL4 community
+on developers@okl4.org.  You can subscribe by visiting
+https://lists.okl4.org/mailman/listinfo/developer
+
+You may find these documents useful:
+* OKL4 Library Reference Manual
+* SoC Reference Manual
+* Elfweaver Reference Manual
+* OKL4 Reference Manual
+* SDK Tutorial: Hello World
+
+They can be downloaded from http://wiki.ok-labs.com.

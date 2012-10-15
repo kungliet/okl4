@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+<!DOCTYPE image
+  SYSTEM 'weaver-2.0.dtd'>
+<image>
+	<machine>
+		<cpu name="xscale"/>
+		<word_size size="0x20"/>
+		<virtual_memory name="virtual">
+			<region base="0x80000000" size="0x50000000"/>
+		</virtual_memory>
+		<physical_memory name="sdram">
+			<region base="0x5c000000" rights="all" size="0x40000"/>
+		</physical_memory>
+		<physical_memory name="rom">
+			<region base="0xa3800000" rights="all" size="0x800000"/>
+		</physical_memory>
+		<physical_memory name="physical">
+			<region base="0xa0000000" rights="all" size="0x3800000"/>
+		</physical_memory>
+		<physical_memory name="pcmcia_cf_slot_1">
+			<region base="0x30000000" rights="all" size="0x10000000"/>
+		</physical_memory>
+		<physical_memory name="pcmcia_cf_slot_0">
+			<region base="0x20000000" rights="all" size="0x10000000"/>
+		</physical_memory>
+		<phys_device name="test_dev">
+			<interrupt name="int_test0" number="1"/>
+			<interrupt name="int_test1" number="3"/>
+		</phys_device>
+		<phys_device name="timer_dev">
+			<physical_memory name="timer_mem0">
+				<region base="0x40a00000" cache_policy="uncached" rights="all" size="0x1000"/>
+			</physical_memory>
+			<interrupt name="int_timer0" number="27"/>
+			<interrupt name="int_timer1" number="28"/>
+		</phys_device>
+		<phys_device name="serial_dev">
+			<physical_memory name="serial_mem0">
+				<region base="0x40100000" cache_policy="uncached" rights="all" size="0x1000"/>
+			</physical_memory>
+			<interrupt name="int_serial0" number="22"/>
+		</phys_device>
+		<phys_device name="rtc_dev">
+			<physical_memory name="rtc_mem0">
+				<region base="0x40900000" cache_policy="uncached" rights="all" size="0x1000"/>
+			</physical_memory>
+			<interrupt name="int_rtc0" number="31"/>
+		</phys_device>
+		<page_size size="0x1000"/>
+		<page_size size="0x10000"/>
+		<page_size size="0x100000"/>
+	</machine>
+	<physical_pool direct="true" name="sdram">
+		<memory src="sdram"/>
+	</physical_pool>
+	<physical_pool direct="true" name="rom">
+		<memory src="rom"/>
+	</physical_pool>
+	<virtual_pool name="virtual">
+		<memory src="virtual"/>
+	</virtual_pool>
+	<physical_pool direct="true" name="physical">
+		<memory src="physical"/>
+	</physical_pool>
+	<physical_pool direct="true" name="pcmcia_cf_slot_1">
+		<memory src="pcmcia_cf_slot_1"/>
+	</physical_pool>
+	<physical_pool direct="true" name="pcmcia_cf_slot_0">
+		<memory src="pcmcia_cf_slot_0"/>
+	</physical_pool>
+    <kernel file="data/eg_weave/nanokernel" physpool="physical" virtpool="virtual">
+		<heap align="0x4000"/>
+	</kernel>
+    <okl4 file="data/eg_weave/nano_hello" kernel_heap="0x200000" name="nano_hello">
+		<heap size="0x100000"/>
+	</okl4>
+</image>

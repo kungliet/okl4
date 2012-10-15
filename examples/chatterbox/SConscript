@@ -1,0 +1,21 @@
+#
+# @LICENCE("Public", "2008")@
+#
+
+Import("*")
+
+libs = ["atomic_ops", "c", "okl4"]
+
+# Add kernel-specific libraries
+if env.kernel == "micro":
+    libs += ["l4", "mutex"]
+elif env.kernel == "nano":
+    libs += ["nano"]
+else:
+    raise UserError, "Unknown kernel"
+
+obj = env.KengeProgram("chatterbox", LIBS=libs)
+
+env.set_program(obj, heap = 0x100000)
+
+Return("obj")

@@ -1,0 +1,120 @@
+<!--
+  @LICENCE("Open Kernel Labs, Inc.", "2007")@
+
+  DTD of the elfweaver memstats output spec file.
+-->
+
+<!ELEMENT memstats (revision?, environment, resources) >
+<!ELEMENT revision EMPTY >
+
+<!ELEMENT environment (kernel, cell+) >
+<!ELEMENT kernel (id_range*, pool*, space) >
+<!ELEMENT cell ((id_range | pool)*, space*) >
+
+<!ELEMENT id_range EMPTY >
+<!ELEMENT pool EMPTY >
+<!ELEMENT space ((id_range | pool)*, program+, thread*, mutex*) >
+<!ELEMENT program (psec_list, object_list?) >
+<!ELEMENT psec_list (psec+) >
+<!ELEMENT psec EMPTY >
+<!ELEMENT object_list (object*) >
+<!ELEMENT object EMPTY >
+<!ELEMENT thread EMPTY >
+<!ELEMENT mutex EMPTY >
+
+<!ELEMENT resources (phys_mem?, section_list, segment_list, sas_list, ids, pools) >
+<!ELEMENT phys_mem (section*) >
+<!ELEMENT section_list (section*) >
+<!ELEMENT section EMPTY >
+<!ELEMENT segment_list (segment+) >
+<!ELEMENT segment EMPTY >
+<!ELEMENT sas_list (sas+) >
+<!ELEMENT sas EMPTY >
+<!ELEMENT ids (id_pool*) >
+<!ELEMENT id_pool (range*) >
+<!ELEMENT range EMPTY >
+<!ELEMENT pools ((virt_mem | mem_pool)*) >
+<!ELEMENT virt_mem (vm_section*) >
+<!ELEMENT vm_section EMPTY >
+<!ELEMENT mem_pool (group*) >
+<!ELEMENT group EMPTY >
+
+<!-- Attributes -->
+
+<!ATTLIST revision repository CDATA #IMPLIED >
+<!ATTLIST revision changeset  CDATA #IMPLIED >
+
+<!-- Attributes within the envorinment section -->
+<!ATTLIST environment type CDATA #IMPLIED >
+
+<!ATTLIST cell name CDATA #IMPLIED >
+
+<!ATTLIST id_range name CDATA #REQUIRED >
+<!ATTLIST id_range node IDREF #REQUIRED >
+
+<!ATTLIST pool id   ID    #REQUIRED >
+<!ATTLIST pool vmid IDREF #REQUIRED >
+
+<!ATTLIST space name CDATA #REQUIRED >
+
+<!ATTLIST program name CDATA #REQUIRED >
+
+<!ATTLIST psec name   CDATA #REQUIRED >
+<!ATTLIST psec phys   IDREF #REQUIRED >
+<!ATTLIST psec virt   IDREF #REQUIRED >
+
+<!ATTLIST object_list num_text CDATA #REQUIRED >
+<!ATTLIST object_list num_data CDATA #REQUIRED >
+
+<!ATTLIST object type (text | data) #REQUIRED >
+<!ATTLIST object name CDATA         #REQUIRED >
+<!ATTLIST object size CDATA         #REQUIRED >
+
+
+<!ATTLIST thread pool_id   IDREF #REQUIRED >
+<!ATTLIST thread handle_id IDREF #REQUIRED >
+<!ATTLIST thread clist_id  IDREF #REQUIRED >
+
+<!ATTLIST mutex pool_id   IDREF #REQUIRED >
+<!ATTLIST mutex clist_id  IDREF #REQUIRED >
+
+<!-- Attributes within the resources section -->
+<!ATTLIST phys_mem machine CDATA #REQUIRED >
+<!ATTLIST phys_mem name    CDATA #REQUIRED >
+<!ATTLIST phys_mem pool    CDATA #REQUIRED >
+
+<!ATTLIST section id   ID    #REQUIRED >
+<!ATTLIST section address CDATA       #REQUIRED >
+<!ATTLIST section size  CDATA       #REQUIRED >
+
+<!ATTLIST segment sections IDREFS         #REQUIRED >
+<!ATTLIST segment phys     CDATA          #REQUIRED >
+<!ATTLIST segment virt     CDATA          #REQUIRED >
+<!ATTLIST segment filesz   CDATA          #REQUIRED >
+<!ATTLIST segment memsz    CDATA          #REQUIRED >
+
+<!ATTLIST sas id  ID #REQUIRED >
+
+<!ATTLIST id_pool name   CDATA #REQUIRED >
+<!ATTLIST id_pool parent IDREF #IMPLIED >
+<!ATTLIST id_pool source IDREF #REQUIRED >
+<!ATTLIST id_pool total  CDATA #REQUIRED >
+
+<!ATTLIST range id    ID    #REQUIRED >
+<!ATTLIST range start CDATA #REQUIRED >
+<!ATTLIST range size  CDATA #REQUIRED >
+
+<!ATTLIST virt_mem id     ID    #REQUIRED >
+<!ATTLIST virt_mem sas_id IDREF #REQUIRED >
+
+<!ATTLIST vm_section id      ID #REQUIRED >
+<!ATTLIST vm_section address CDATA #REQUIRED >
+<!ATTLIST vm_section size    CDATA #REQUIRED >
+
+<!ATTLIST mem_pool id         ID #REQUIRED >
+<!ATTLIST mem_pool node       IDREF #REQUIRED >
+<!ATTLIST mem_pool block_size CDATA #IMPLIED>
+
+<!ATTLIST group name CDATA            #REQUIRED >
+<!ATTLIST group type (normal | small) #IMPLIED >
+<!ATTLIST group size CDATA            #REQUIRED >

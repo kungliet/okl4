@@ -1,0 +1,5 @@
+<okl4 name="ERROR: SUPPLY A NAME FOR THE CELL IN cell.xml.in" file="ERROR: ENTER THE CELL'S FILE NAME IN cell.xml.in" kernel_heap="0x200000" clists="256" mutexes="256" spaces="256" >
+    <use_device name="serial_dev" />
+    <heap size="0x100000" />
+    <commandline />
+</okl4>

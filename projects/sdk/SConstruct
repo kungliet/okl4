@@ -1,0 +1,248 @@
+#
+# Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+# All rights reserved.
+# 
+# 1. Redistribution and use of OKL4 (Software) in source and binary
+# forms, with or without modification, are permitted provided that the
+# following conditions are met:
+# 
+#     (a) Redistributions of source code must retain this clause 1
+#         (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+#         (Licence Terms) and the above copyright notice.
+# 
+#     (b) Redistributions in binary form must reproduce the above
+#         copyright notice and the Licence Terms in the documentation and/or
+#         other materials provided with the distribution.
+# 
+#     (c) Redistributions in any form must be accompanied by information on
+#         how to obtain complete source code for:
+#        (i) the Software; and
+#        (ii) all accompanying software that uses (or is intended to
+#        use) the Software whether directly or indirectly.  Such source
+#        code must:
+#        (iii) either be included in the distribution or be available
+#        for no more than the cost of distribution plus a nominal fee;
+#        and
+#        (iv) be licensed by each relevant holder of copyright under
+#        either the Licence Terms (with an appropriate copyright notice)
+#        or the terms of a licence which is approved by the Open Source
+#        Initative.  For an executable file, "complete source code"
+#        means the source code for all modules it contains and includes
+#        associated build and other files reasonably required to produce
+#        the executable.
+# 
+# 2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+# LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+# IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+# EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+# THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+# BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+# PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+# THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+# 
+# 3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+from kenge import OKL4Cell
+from kenge import KengeBuild
+
+Import("*")
+
+#############################################################################
+## Setup build
+#############################################################################
+build = KengeBuild()
+
+kernel_types = ['micro', 'nano']
+
+micro_build_types = ['production', 'benchmark', 'tracebuffers', \
+                    'debug_no_console', 'debug']
+nano_build_types = ['production', 'benchmark', 'debug']
+
+okl4_build_types = ['production', 'debug']
+
+micro_lib_paths = ['libs/compat', 'libs/l4', 'libs/l4e', \
+                   'libs/mutex', 'libs/atomic_ops', \
+                   'libs/okl4']
+
+# Nano does not support RVCT
+if build.toolchain.type == 'rvct':
+    kernel_types = ['micro']
+    micro_lib_paths.append('libs/rvct')
+else:
+    micro_lib_paths.append('libs/c')
+
+# Question: should libs/compat be here?
+nano_lib_paths = ['libs/c', 'libs/compat', 'libs/atomic_ops', 'libs/nano', \
+                  'libs/okl4']
+
+nano_unsupported_platforms = ["s3c2410", "stn8815", "davinci"]
+
+# Add serial driver to nano libraries
+serial_driver = None
+for (driver, server, _, _) in build.machine.v2_drivers:
+    if server == "vserial":
+        serial_driver = driver
+        micro_lib_paths.append("drivers/%s" % serial_driver)
+        nano_lib_paths.append("drivers/%s" % serial_driver)
+        break
+
+# The name of example, path to source, path to SConscript.
+# Format is [(example name, [list of cells in example])]
+# Note: First cell in the example is designated to be the 'root' cell,
+#       i.e. it gets the serial driver.
+okl4_examples = [
+                 # XXX: Do not release ctest
+                 # ("ctest", [("ctest", "#ctest", "cells/ctest")]),
+                 ("args", [("args", "#examples/args", "cells/examples")]),
+                 ("singlecell", [("hello", "#examples/hello", "cells/examples")]),
+                 ("pingpong", [("pingpong", "#examples/pingpong", "cells/examples")]),
+                 ("decrypt", [("decrypt", "#examples/decrypt", "cells/examples")]),
+                 ("multicell", [("echo", "#examples/echo", "cells/examples"),
+                                ("chatterbox", "#examples/chatterbox", "cells/examples")
+                               ]),
+                ]
+
+# Generate configurations for kernels and okl4. A configuration
+# is considered to be a tuple (<kernel_type>, <abi_type>, <build_type>)
+micro_configs = []
+nano_configs = []
+okl4_configs = []
+for x in kernel_types:
+    for y in micro_build_types:
+        if x == "micro":
+            micro_configs.append((x, y))
+    for y in nano_build_types:
+        if x == "nano":
+            nano_configs.append((x, y))
+    for y in okl4_build_types:
+        if not (x == "nano" and
+                (build.machine.platform in nano_unsupported_platforms)):
+            okl4_configs.append((x, y))
+
+# gta01 is not currently supported by nano
+if build.machine.platform in nano_unsupported_platforms:
+    nano_configs = []
+
+# A list of tuples containing sdk installation data for the different
+# configurations. Really its just a grab-bag of everything needed to
+# install a particular configuration.
+micro_sdk_data = []
+nano_sdk_data = []
+okl4_sdk_data = []
+okl4_examples_data = []
+
+# Build micro kernel configurations
+for config in micro_configs:
+    # FIXME: the name must begin with 'pistachio_' due to some
+    # kenge.py internals.
+    build_name = "pistachio_" + "_".join(config)
+
+    (kernel_env, kernel_o, platform_o, defines, linkscript, libs, plat_src) = \
+            build.Cell("cells/microkernel", config = config[1], name = build_name, sdk = True)
+
+    include = os.path.join(build.build_dir, build_name, "include")
+    micro_sdk_data.append((kernel_env, config, kernel_o, platform_o, defines,
+                linkscript, include, libs, plat_src))
+
+# Build nano kernel configurations
+for config in nano_configs:
+    build_name = "_".join(config)
+
+    nkernel = build.Cell("cells/nanokernel", config = config[1], name = build_name, sdk = True)
+
+    include = os.path.join(build.build_dir, build_name, "include")
+    nano_sdk_data.append((config, nkernel, include))
+
+# Build libokl4 configurations
+for config in okl4_configs:
+    libs = []
+    build_subdir = "okl4_" + "_".join(config)
+
+    build_env = build.KengeEnvironment(build_subdir, is_rootserver = True,
+                                        kernel = config[0],
+                                        TOOLCHAIN=build.toolchain_name)
+
+    # Setup global defines for the sdk.
+    if config[1] == "production":
+        build_env.Append(CPPDEFINES = ["NDEBUG"])
+
+    # Give build env path to the serial driver dependencies.
+    if serial_driver:
+        build_env.Package("libs/queue")
+        build_env.Package("libs/util")
+        build_env.Package("libs/driverv2")
+        libs.append(build_env.Package("libs/serial", serial_driver=serial_driver))
+
+    # Setup kernel-specific defines and build the libraries.
+    if config[0] == "nano":
+        build_env.Append(CPPDEFINES = ["NANOKERNEL"])
+
+        for lib in nano_lib_paths:
+            libs.append(build_env.Package(lib, serial_driver = serial_driver))
+
+    elif config[0] == "micro":
+        build_env.Append(CPPDEFINES=["THREAD_SAFE"])
+
+        for lib in micro_lib_paths:
+            libs.append(build_env.Package(lib, serial_driver = serial_driver))
+    else:
+        print "error: invalid kernel type"
+
+
+    # FIXME: Need a better way to do this. Create a dependency for crt0.
+    build_env.Depends(libs[0], build_env.scons_env["CRTOBJECT"])
+    libs.append(build_env.scons_env["CRTOBJECT"])
+
+    include = os.path.join(build.build_dir, build_subdir, "include")
+    okl4_sdk_data.append((config, include, libs))
+
+# The following uses the build system to create the xml fragments for
+# the example cells. Not example code actually gets built here.
+for (example_name, cells) in okl4_examples:
+    root_cell = cells[0][0] # Name of first cell in the example
+    example_cells_data = []
+    for (cell_name, cell_source, cell_scons) in cells:
+        has_serial = False
+        if cell_name == root_cell:
+            has_serial = True
+
+        example_env = build.Cell(cell_scons, name = cell_name,
+                example_name = cell_name, has_serial = has_serial)
+
+        if cell_name != root_cell:
+            example_env.env_append(None,
+                                   key = "ROOT_CELL_CAP",
+                                   cap = "/%s/main" % root_cell)
+        # Note: We can leave spaces=256 for Nano since the SDK cell
+        # Makefile will ensure any Nano builds have spaces set to 1.
+        # Otherwise, for Micro we evenly share the number of spaces
+        # between cells.
+        example_env.set_cell_config(spaces=256/len(cells))
+        example_cells_data.append((cell_name, cell_source))
+
+    okl4_examples_data.append((example_name, example_cells_data))
+
+# Make tarball for the above.
+sdk_env = build.KengeEnvironment("SDK")
+tar = sdk_env.Package("sdk",
+                       micro_sdk_data = micro_sdk_data,
+                       nano_sdk_data = nano_sdk_data,
+                       okl4_sdk_data = okl4_sdk_data,
+                       dom = build.dom,
+                       soc_example = micro_sdk_data[0][8],
+                       okl4_examples_data = okl4_examples_data)
+Default(tar)

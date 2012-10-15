@@ -1,0 +1,547 @@
+#
+# Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+# All rights reserved.
+# 
+# 1. Redistribution and use of OKL4 (Software) in source and binary
+# forms, with or without modification, are permitted provided that the
+# following conditions are met:
+# 
+#     (a) Redistributions of source code must retain this clause 1
+#         (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+#         (Licence Terms) and the above copyright notice.
+# 
+#     (b) Redistributions in binary form must reproduce the above
+#         copyright notice and the Licence Terms in the documentation and/or
+#         other materials provided with the distribution.
+# 
+#     (c) Redistributions in any form must be accompanied by information on
+#         how to obtain complete source code for:
+#        (i) the Software; and
+#        (ii) all accompanying software that uses (or is intended to
+#        use) the Software whether directly or indirectly.  Such source
+#        code must:
+#        (iii) either be included in the distribution or be available
+#        for no more than the cost of distribution plus a nominal fee;
+#        and
+#        (iv) be licensed by each relevant holder of copyright under
+#        either the Licence Terms (with an appropriate copyright notice)
+#        or the terms of a licence which is approved by the Open Source
+#        Initative.  For an executable file, "complete source code"
+#        means the source code for all modules it contains and includes
+#        associated build and other files reasonably required to produce
+#        the executable.
+# 
+# 2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+# LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+# IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+# EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+# THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+# BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+# PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+# THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+# 
+# 3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+Import("*")
+
+import re
+import os.path
+import SCons
+import copy
+import glob
+
+quote_pattern = re.compile(r"\\\"")
+
+kenge_env = env
+def WriteDefines(target, source, env):
+    out = open(str(target[0]), "w")
+    out.write("DEFINES=")
+
+    for entry in env["cppdefines"]:
+        if type(entry) == type(()):
+            s = quote_pattern.sub("\"", str(entry[1]))
+            out.write("-D" + entry[0] + "=" + str(s) + " ")
+        else:
+            out.write("-D" + entry + " ")
+
+    out.close()
+
+
+def WriteCXXFlags(target, source, env):
+    out = open(str(target[0]), "w")
+    out.write("CCFLAGS=")
+
+    # We pass in the kernel's build environment
+    kernel_env = env["kernel_env"]
+    toolchain = kernel_env.toolchain
+    if not toolchain:
+        toolchain = kenge_env.toolchain
+    subst = kernel_env.scons_env.subst
+    if not subst:
+        subst = env.subst
+
+    if toolchain.dict.has_key('_CCFLAGS'):
+        out.write(subst(toolchain.dict['_CCFLAGS']) + " ")
+    else:
+        out.write(subst('$CCFLAGS') + " ")
+
+    if toolchain.dict.has_key('_CC_PLAT_FLAGS'):
+        out.write(subst(toolchain.dict['_CC_PLAT_FLAGS']) + " ")
+    else:
+        out.write(subst('$CC_PLAT_FLAGS') + " ")
+
+    out.close()
+
+
+def WriteXML(target, source, env):
+    f = open(target[0].abspath, "w")
+    f.write(env["xml_elem"].toprettyxml())
+    f.close()
+
+
+def install_kernel_micro(sdk_dir, datum, dom):
+
+    (kernel_env, config, kernel_o, platform_o, defines, \
+     linkscript, include, libs, _) = datum
+    config_name = "-".join(config)
+    inst_dir = os.path.join(sdk_dir, config_name, "object")
+    libs_dir = os.path.join(sdk_dir, config_name, "libs")
+    inc_dir  = os.path.join(sdk_dir, config_name, "include")
+
+    # Copy soc.o into place.
+    soc_copy = env.CopyFile(os.path.join(inst_dir, env.machine.platform + '.o'),
+                        platform_o)
+
+    # Write out a machine.xml.
+    env.Command(os.path.join(inst_dir, 'machine.xml'), soc_copy,
+        Action(WriteXML, "[XML ] $TARGET"),
+        xml_elem = dom.getElementsByTagName('machine')[0])
+
+    # Copy kernel.o into place.
+    kernel_copy = env.CopyFile(os.path.join(inst_dir, env.machine.cpu + '.o'),
+                        kernel_o)
+
+    # Write out kernel.xml.
+    elem = None
+    for e in dom.getElementsByTagName('kernel'):
+        if e.getAttribute('file').find("_".join(config)) != -1:
+            elem = copy.deepcopy(e)
+            break
+
+    # Change the kernel element so that it uses the 'sdk' sytnax
+    # as opposed to 'file' syntax to identify the kernel. We use a
+    # copy so as not to effect the real dom.
+    elem.removeAttribute('file')
+    elem.setAttribute('sdk', '../../../../')
+    elem.setAttribute('configuration', config_name)
+    elem.setAttribute('platform', env.machine.platform)
+    elem.setAttribute('physpool', 'physical')
+    elem.setAttribute('virtpool', 'virtual')
+
+    env.Command(os.path.join(inst_dir, 'kernel.xml'), kernel_copy,
+                Action(WriteXML, "[XML ] $TARGET"), xml_elem = elem)
+
+    # Write out defines and cflags.
+    env.Command(os.path.join(inst_dir, 'defines'),
+                None, Action(WriteDefines),
+                cppdefines = defines)
+    env.Command(os.path.join(inst_dir, 'ccflags'),
+                None, Action(WriteCXXFlags),
+                kernel_env = kernel_env)
+
+    # Copy libs and includes into place.
+    for lib in libs:
+        env.scons_env.Install(libs_dir, libs)
+
+    env.CopySConsTree(inc_dir, include)
+
+    # Setup linker script.
+    linker_script_name = 'linker.lds'
+    env.CopyFile(os.path.join(inst_dir, linker_script_name),
+                 linkscript)
+
+    linker_sed_subs = {
+        '@LINKER@'             : '$_LINK',
+        '@LINKER_SCRIPT_FLAG@' : '$LINK_SCRIPT_PREFIX',
+        '@LINKER_FLAGS@'       : '$LINKFLAGS -u _start'
+    }
+
+    if env.toolchain.type == "gnu":
+        linker_sed_subs['@TOOLPREFIX@'] = '$TOOLPREFIX'
+    else:
+        linker_sed_subs['@TOOLPREFIX@'] = ''
+
+    lsh = env.KengeSed(os.path.join(inst_dir, 'linker.sh'),
+                       "linker.sh.in", linker_sed_subs)
+    env.scons_env.AddPostAction(lsh, Chmod('$TARGET', 0755))
+
+
+def install_kernel_nano(sdk_dir, datum, dom):
+
+    (config, kernel, include) = datum
+    config_name = "-".join(config)
+    inst_dir = os.path.join(sdk_dir, config_name, "object")
+    libs_dir = os.path.join(sdk_dir, config_name, "libs")
+    inc_dir  = os.path.join(sdk_dir, config_name, "include")
+
+    # Copy the kernel into place.
+    kernel_copy = env.CopyFile(os.path.join(inst_dir, 'nano'), kernel)
+
+    # There are no includes for nano
+    # env.CopySConsTree(inc_dir, include)
+
+    # Write out a machine.xml.
+    env.Command(os.path.join(inst_dir, 'machine.xml'), kernel_copy,
+        Action(WriteXML, "[XML ] $TARGET"),
+        xml_elem = dom.getElementsByTagName('machine')[0])
+
+    # Write out kernel.xml for the kernel.
+    elem = None
+    for e in dom.getElementsByTagName('kernel'):
+        if e.getAttribute('file').find("_".join(config)) != -1:
+            elem = copy.deepcopy(e)
+            break
+
+    # Set the file attribute to the location of nano relative to the
+    # install location of the xml file. In this case they are at the
+    # same place.
+    elem.setAttribute('file', 'nano')
+    elem.setAttribute('physpool', 'physical')
+    elem.setAttribute('virtpool', 'virtual')
+    env.Command(os.path.join(inst_dir, 'kernel.xml'), kernel_copy,
+                Action(WriteXML, "[XML ] $TARGET"), xml_elem = elem)
+
+
+def install_soc_example(example_dir, example, dom):
+    """ """
+    # Copy sample platform code into example.
+    example_copies = env.CopySConsTree(example_dir, example)
+
+    # Write out machine.xml.in to examples.
+    env.Command(os.path.join(example_dir, 'machine.xml.in'), example_copies,
+        Action(WriteXML, "[XML ] $TARGET"),
+        xml_elem = dom.getElementsByTagName('machine')[0])
+
+    makefile_sed_subs = {
+        '@PLATFORM@'    : '$PLATFORM',
+        '@CPU@'         : '$CPU',
+        '@CC@'          : '$_CC',
+        '@AS@'          : '$_AS',
+        '@LINK@'        : '$_LINK',
+        '@ASFLAGS@'     : '$ASFLAGS',
+        '@LDFLAGS@'     : '$LINKFLAGS',
+        '@RELOC@'       : '$RELOCATION_OPT',
+        '@LINK_PREFIX@' : '$LINK_SCRIPT_PREFIX'
+    }
+
+    if env.toolchain.type == "gnu":
+        makefile_sed_subs['@TOOLPREFIX@'] = '$TOOLPREFIX'
+        makefile_sed_subs['@ASDEFINES@'] = '-DASSEMBLY'
+        makefile_sed_subs['@ASCOMPILE@'] = "\$\(CC) \$\(ASFLAGS) \$\(INCLUDES) \$\(ASDEFINES) -c $< -o $@"
+        makefile_sed_subs['@SEARCHDIRS@'] = 'src kdb'
+    else:
+        makefile_sed_subs['@TOOLPREFIX@'] = ''
+        makefile_sed_subs['@ASDEFINES@'] = '-DASSEMBLY -D__ASSEMBLY__ --gnu -U__GNUC__ -D__RVCT_GNU__'
+        makefile_sed_subs['@ASCOMPILE@'] = '\$\(CC) \$\(ASFLAGS) \$\(INCLUDES) \$\(ASDEFINES) $< -E -o $@.s \&\& \$\(AS) \$\(ASFLAGS) $@.s -o $@'
+        makefile_sed_subs['@SEARCHDIRS@'] = 'src src/rvct kdb'
+
+    env.KengeSed(os.path.join(example_dir, 'Makefile'), "Makefile.soc.in", makefile_sed_subs)
+
+
+def install_okl4_sdk(sdk_dir, install_data):
+    """ """
+    # Copy all libraries and headers for the SDK into place. Also
+    # various fixes to make the SDK look nice.
+    for (config, include, libs) in install_data:
+        config_name = "-".join(config)
+        libs_dir = os.path.join(sdk_dir, config_name, "libs")
+        inc_dir = os.path.join(sdk_dir, config_name, "include")
+
+        # Create a 'composite' library that combines all the .o files
+        # from the other libraries. Don't include libc.a or crt0.o. At
+        # the same time create a new list of libraries containing all
+        # those that are not in the composite library.
+        clib_objs = []
+        new_libs = []
+        for lib in libs:
+            if os.path.basename(lib[0].get_abspath()) in ["libc.a", "crt0.o"]:
+                new_libs.append(lib)
+            else:
+                clib_objs += [c.get_abspath() for c in lib[0].all_children()]
+
+        # Make the composite library.
+        clib = Library(os.path.join(libs_dir, "okl4"), clib_objs)
+
+        # Copy libraries into place
+        for lib in new_libs:
+            env.scons_env.Install(libs_dir, lib)
+
+        # Copy inlude files
+        env.CopySConsTree(inc_dir, include)
+
+        # This is a hack to work around not having seperate arch
+        # directories for arm v4 and arm v5.
+        if getattr(env.machine, "arch_version_no_kidding", 0) == 4:
+            arm_config_file = os.path.join(inc_dir, "okl4", "arch", "ver", "config.h")
+            sed_action = Action("sed -i -e 's/#define __ARMv__ 5/#define __ARMv__ 4/' $TARGET", '[SED ] $TARGET')
+            env.scons_env.AddPostAction(arm_config_file, sed_action)
+
+
+def install_okl4_examples(examples, dom):
+
+    examples_dir = os.path.join("sdk", "okl4", env.machine.cpu, "examples")
+
+    # Common Makefile configuration.
+ 
+    arch_ccflags = ''
+    if kenge_env.toolchain.dict.has_key('_CCFLAGS'):
+        arch_ccflags += kenge_env.scons_env.subst(kenge_env.toolchain.dict['_CCFLAGS']) + " "
+    else:
+        arch_ccflags += kenge_env.scons_env.subst('$CCFLAGS') + " "
+
+    makefile_sed_subs = {
+        '@CPU@'           : '$CPU',
+        '@ARCH_CCFLAGS@'  : arch_ccflags,
+        '@DEFINES@'       : ''
+    }
+    if env.toolchain.type == "gnu":
+        libgcc = '\$\(shell \$\(CC\) --print-libgcc-file-name\)'
+
+        makefile_sed_subs['@TOOLPREFIX@'] = 'arm-unknown-linux-gnueabi-'
+        makefile_sed_subs['@CC@'] = 'gcc'
+        makefile_sed_subs['@LINK@'] = 'ld'
+        makefile_sed_subs['@LIBGCC@'] = libgcc 
+        makefile_sed_subs['@LDFLAGS@'] = '-L$\(LIB_DIR)'
+        makefile_sed_subs['@LIB_LIST_START@'] = '--start-group'
+        makefile_sed_subs['@LIB_LIST_END@'] = '--end-group'
+        makefile_sed_subs['@LINK_ADDR_FLAG@'] = '-Ttext='
+    else:
+        makefile_sed_subs['@TOOLPREFIX@'] = ''
+        makefile_sed_subs['@CC@'] = 'armcc'
+        makefile_sed_subs['@LINK@'] = 'armlink'
+        makefile_sed_subs['@LIBGCC@'] = ''
+        makefile_sed_subs['@LDFLAGS@'] = '$LINKFLAGS'
+        makefile_sed_subs['@LIB_LIST_START@'] = ''
+        makefile_sed_subs['@LIB_LIST_END@'] = ''
+        makefile_sed_subs['@LINK_ADDR_FLAG@'] = '--ro '
+
+    for (example_name, cells) in examples:
+        # This is the virtual address at which the first cell is linked at
+        # As a default, each cell gets 256MB (0x10000000) of virtual address space
+        cell_link_address = env.machine.base_vaddr
+
+        example_image_dir = os.path.join(examples_dir, example_name)
+
+        # Copy image.xml
+        env.CopyFile(os.path.join(example_image_dir, 'image.xml.in'), 'image.xml.in')
+
+        # Copy in a skyeye configuration.
+        env.CopyFile(os.path.join(example_image_dir, 'skyeye.conf'), 'skyeye.conf')
+
+        cell_list = ""
+        for (cell_name, cell_source) in cells:
+            cell_list = cell_list + ("%s " % cell_name)
+            # Copy the cell into place.
+            cell_bin_dir = os.path.join(example_image_dir, cell_name)
+            cell_dir_src = os.path.join(cell_bin_dir, "src")
+            cell_dir_include = os.path.join(cell_bin_dir, "include")
+            cell_copy = env.CopyTree(cell_dir_src,
+                                os.path.join(cell_source, "src"))
+
+            if cell_name == "ctest":
+                cell_dir_include = os.path.join(cell_dir_include, "ctest")
+
+            env.CopyTree(cell_dir_include,
+                os.path.join(cell_source, "include"))
+
+            # Write out the cell xml file.
+            elem = None
+            for e in dom.getElementsByTagName('okl4'):
+                if e.getAttribute('name').find(cell_name) != -1:
+                    elem = copy.deepcopy(e)
+                    break
+
+            elem.setAttribute('file', cell_name)
+            cell_xml = env.Command(os.path.join(cell_bin_dir, '%s.xml.in' % cell_name),
+                                cell_copy, Action(WriteXML, "[XML ] $TARGET"),
+                                xml_elem = elem)
+
+            # Write cell Makefile.
+            makefile_sed_subs['@CELL_NAME@'] = cell_name
+            makefile_sed_subs['@CELL_LINK_ADDRESS@'] = "%#x" % cell_link_address
+            cell_link_address += 0x10000000
+            makefile_sed = env.KengeSed(os.path.join(cell_bin_dir, 'Makefile'),
+                                        "Makefile.okl4.in", makefile_sed_subs)
+
+            # Make the Makefile depend on the cell xml. TODO: find a more
+            # appropriate dependency?
+            env.Depends(makefile_sed, cell_xml)
+
+        # Write out image Makefile.
+        makefile_sed_subs['@CELLS@'] = cell_list
+        env.KengeSed(os.path.join(example_image_dir, 'Makefile'),
+                                    "Makefile.image.in", makefile_sed_subs)
+
+def install_oklinux_sample(dom):
+    linux_dir = os.path.join("sdk", "okl4", env.machine.cpu, "examples",
+                              "linux")
+
+    linux_cell_dir = os.path.join(linux_dir, "cell")
+
+    # Common Makefile configuration.
+    arch_ccflags = ''
+    libgcc = '\$\(shell \$\(CC\) --print-libgcc-file-name\)'
+
+    makefile_sed_subs = {
+        '@CPU@'           : '$CPU',
+        '@CC@'            : 'gcc',
+        '@LINK@'          : 'ld',
+        '@TOOLPREFIX@'    : 'arm-unknown-linux-gnueabi-',
+        '@ARCH_CCFLAGS@'  : arch_ccflags,
+        '@LIBGCC@'        : libgcc
+    }
+
+    versatile_nhk_sed_subs = {
+        'ttyS0'          : 'ttyAMA0'
+    }
+
+    versatile_nhk_sed_deletes = [
+        'dma_dev',
+        'gpio_dev',
+        'cs_dev',
+        'cs_mem'
+    ]
+
+    kzm_sed_deletes = [
+        'gpio_dev',
+        'cs_dev',
+        'cs_mem'
+    ]
+
+    # Copy image.xml
+    env.CopyFile(os.path.join(linux_dir , 'image.xml.in'), 'image.xml.in')
+
+    # Copy in a skyeye configuration.
+    env.CopyFile(os.path.join(linux_dir , 'skyeye.conf'), 'skyeye.conf')
+
+    # Write out image Makefile.
+    env.KengeSed(os.path.join(linux_dir , 'Makefile'),
+                                "Makefile.linux_image.in", makefile_sed_subs)
+
+    # Write cell Makefile.
+    makefile_sed_subs['@CELL_LINK_ADDRESS@'] = "%#x" % env.machine.base_vaddr
+    env.KengeSed(os.path.join(linux_cell_dir, 'Makefile'),
+                                "Makefile.linux_cell.in", makefile_sed_subs)
+
+    # Copy in the cell xml
+    if env.machine.__name__  ==  "versatile" or env.machine.__name__ == "nhk15":
+        env.KengeSed('temp.xml', 'sample_linux.xml.in', versatile_nhk_sed_subs)
+        env.KengeSedDelete(os.path.join(linux_cell_dir, 'cell.xml.in'), 'temp.xml',
+                                        versatile_nhk_sed_deletes)
+    elif env.machine.__name__  ==  "kzm_arm11":
+        env.KengeSedDelete(os.path.join(linux_cell_dir, 'cell.xml.in'), 'sample_linux.xml.in',
+                                        kzm_sed_deletes)
+    else:
+        env.CopyFile(os.path.join(linux_cell_dir, 'cell.xml.in'), 'sample_linux.xml.in')
+
+def install_okl4_sample(dom):
+    sample_dir = os.path.join("sdk", "okl4", env.machine.cpu, "examples",
+                              "sample")
+
+    sample_image_dir = os.path.join(sample_dir, "image")
+    sample_cell_dir = os.path.join(sample_dir, "cell")
+
+    # Common Makefile configuration.
+    arch_ccflags = ''
+    libgcc = '\$\(shell \$\(CC\) --print-libgcc-file-name\)'
+
+    makefile_sed_subs = {
+        '@CPU@'           : '$CPU',
+        '@CC@'            : 'gcc',
+        '@LINK@'          : 'ld',
+        '@TOOLPREFIX@'    : 'arm-unknown-linux-gnueabi-',
+        '@ARCH_CCFLAGS@'  : arch_ccflags,
+        '@LIBGCC@'        : libgcc
+    }
+
+    # Copy image.xml
+    env.CopyFile(os.path.join(sample_image_dir, 'image.xml.in'), 'image.xml.in')
+
+    # Copy in a skyeye configuration.
+    env.CopyFile(os.path.join(sample_image_dir, 'skyeye.conf'), 'skyeye.conf')
+
+    # Write out image Makefile.
+    env.KengeSed(os.path.join(sample_image_dir, 'Makefile'),
+                                "Makefile.sample_image.in", makefile_sed_subs)
+
+    # Write cell Makefile.
+    makefile_sed_subs['@CELL_LINK_ADDRESS@'] = "%#x" % env.machine.base_vaddr
+    env.KengeSed(os.path.join(sample_cell_dir, 'Makefile'),
+                                "Makefile.sample_cell.in", makefile_sed_subs)
+
+    # Copy in the cell xml
+    env.CopyFile(os.path.join(sample_cell_dir, 'cell.xml.in'), 'sample_cell.xml.in')
+
+# Setup some system properties needed for Makefiles
+env.scons_env['CPU'] = env.machine.cpu
+env.scons_env['PLATFORM'] = env.machine.platform
+
+# Install the micro kernels into the sdk.
+kernel_sdk_dir = os.path.join("sdk", "kernel", env.machine.cpu)
+for datum in args["micro_sdk_data"]:
+    install_kernel_micro(kernel_sdk_dir, datum, args["dom"])
+
+# Install the nano kernels into the sdk.
+for datum in args["nano_sdk_data"]:
+    install_kernel_nano(kernel_sdk_dir, datum, args["dom"])
+
+# Install the SoC example.
+soc_example_dir = os.path.join(kernel_sdk_dir, "soc", "%s" % env.machine.platform)
+install_soc_example(soc_example_dir, args['soc_example'], args['dom'])
+
+# Install the libokl4 part of the SDK
+okl4_sdk_dir = os.path.join("sdk", "okl4", env.machine.cpu)
+install_okl4_sdk(okl4_sdk_dir, args['okl4_sdk_data'])
+
+# Install the examples for libokl4
+install_okl4_examples(args['okl4_examples_data'], args['dom'])
+
+# Install sample files
+install_okl4_sample(args['dom'])
+install_oklinux_sample(args['dom'])
+
+# Copy README into place.
+env.CopyFile(os.path.join("sdk", 'README'), 'README')
+env.CopyFile(os.path.join("sdk", 'LICENSE'), 'LICENSE')
+
+# Copy Elfweaver/Elfadorn into place.
+env.CopyFile(os.path.join("sdk", "bin", "elfweaver"), env.elfweaver)
+env.CopyFile(os.path.join("sdk", "bin", "elfadorn"), env.elfadorn)
+
+# Run Licence Tool over the SDK
+lic = env.KengeLicenceTool("lic", # Dummy target
+                           [os.path.join("sdk", "okl4"),
+                            os.path.join("sdk", "kernel")],
+                           sdk=True)
+
+# Make tarball.
+version = conf.SDK.dict.get("VERSION", "3.0")
+obj = env.KengeTarball("sdk-%s-%s.tar.gz" % (env.machine.cpu, version), "sdk")
+# Force a dependency so the licence_tool gets called at the right time.
+env.Depends(obj, lic)
+
+Return("obj")

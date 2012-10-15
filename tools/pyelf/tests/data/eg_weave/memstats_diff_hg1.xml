@@ -1,0 +1,604 @@
+<?xml version="1.0"?>
+<!DOCTYPE memstats SYSTEM "memstats-2.0.dtd">
+<memstats>
+  <revision  repository="ssh://hg.ok-labs.com//hg/okl4-mainline"  changeset="12345677+ tip" />
+  <environment type="Nano">
+    <kernel>
+      <pool id="kheap" vmid="phys8" />
+      <space name="kspace">
+        <pool id="vm0" vmid="kspc" />
+        <program name="kernel">
+          <psec_list>
+            <psec name="kernel.vectors" phys="phys0" virt="kspc0" />
+            <psec name="kernel.asmtext" phys="phys1" virt="kspc1" />
+            <psec name="kernel.data" phys="phys2" virt="kspc2" />
+            <psec name="kernel.bss" phys="phys3" virt="kspc3" />
+            <psec name="kernel.text" phys="phys4" virt="kspc4" />
+            <psec name="kernel.init" phys="phys5" virt="kspc5" />
+            <psec name="kernel.stack" phys="phys6" virt="kspc6" />
+            <psec name="kernel.user_helpers" phys="phys7" virt="kspc7" />
+            <psec name="kernel.heap" phys="phys8" virt="kspc8" />
+            <psec name="(weaved object)" phys="phys9" virt="kspc9" />
+            <psec name="(weaved object)" phys="phys15" virt="kspc10" />
+            <psec name="(weaved object)" phys="phys16" virt="kspc11" />
+            <psec name="(weaved object)" phys="phys17" virt="kspc12" />
+            <psec name="(weaved object)" phys="phys18" virt="kspc13" />
+            <psec name="(weaved object)" phys="phys19" virt="kspc14" />
+            <psec name="(weaved object)" phys="phys14" virt="kspc15" />
+            <psec name="(weaved object)" phys="phys11" virt="kspc16" />
+            <psec name="(weaved object)" phys="phys20" virt="kspc17" />
+            <psec name="(weaved object)" phys="phys21" virt="kspc18" />
+            <psec name="(weaved object)" phys="phys0" virt="kspc19" />
+            <psec name="(weaved object)" phys="phys18" virt="kspc20" />
+            <psec name="(weaved object)" phys="phys22" virt="kspc21" />
+            <psec name="(weaved object)" phys="phys7" virt="kspc22" />
+          </psec_list>
+          <object_list num_text="45" num_data="21">
+            <object type="text" name="hash_tag" size="56"/>
+            <object type="text" name="copy_message" size="52"/>
+            <object type="text" name="thread_reap" size="92"/>
+            <object type="text" name="sys_ipc_send" size="24"/>
+            <object type="text" name="putchar" size="48"/>
+            <object type="text" name="yield" size="112"/>
+            <object type="text" name="sys_interrupt_pre_thread_delete_callback" size="60"/>
+            <object type="text" name="sys_interrupt_register" size="112"/>
+            <object type="text" name="sys_yield" size="12"/>
+            <object type="text" name="plat_mask_interrupt" size="32"/>
+            <object type="text" name="__assert_failure" size="16"/>
+            <object type="text" name="sys_futex_wait" size="284"/>
+            <object type="text" name="plat_decode_interrupt" size="28"/>
+            <object type="text" name="sys_signal_post_thread_delete_callback" size="4"/>
+            <object type="text" name="deactivate_self_schedule" size="84"/>
+            <object type="text" name="puts" size="52"/>
+            <object type="text" name="sys_signal_poll" size="48"/>
+            <object type="text" name="plat_unmask_interrupt" size="32"/>
+            <object type="text" name="sys_thread_create" size="216"/>
+            <object type="text" name="sys_ipc_recv" size="280"/>
+            <object type="text" name="sys_ipc_send_c" size="412"/>
+            <object type="text" name="sys_ipc_post_thread_delete_callback" size="4"/>
+            <object type="text" name="schedule" size="12"/>
+            <object type="text" name="sys_ipc_post_thread_create_callback" size="4"/>
+            <object type="text" name="deactivate_self" size="76"/>
+            <object type="text" name="activate" size="60"/>
+            <object type="text" name="arch_enable_interrupt" size="4"/>
+            <object type="text" name="vprintk" size="360"/>
+            <object type="text" name="sys_futex_signal" size="300"/>
+            <object type="text" name="printk" size="32"/>
+            <object type="text" name="sys_signal_wait" size="64"/>
+            <object type="text" name="sys_interrupt_wait" size="68"/>
+            <object type="text" name="c_handle_interrupt" size="88"/>
+            <object type="text" name="arch_disable_interrupt" size="4"/>
+            <object type="text" name="sys_interrupt_deregister" size="108"/>
+            <object type="text" name="sys_thread_myself" size="28"/>
+            <object type="text" name="sys_ipc_pre_thread_delete_callback" size="4"/>
+            <object type="text" name="sys_signal_post_thread_create_callback" size="4"/>
+            <object type="text" name="plat_putc" size="36"/>
+            <object type="text" name="sys_signal_pre_thread_create_callback" size="16"/>
+            <object type="text" name="sys_thread_join" size="176"/>
+            <object type="text" name="sys_signal_pre_thread_delete_callback" size="4"/>
+            <object type="text" name="sys_signal_send" size="172"/>
+            <object type="text" name="sys_thread_exit" size="120"/>
+            <object type="text" name="sys_ipc_pre_thread_create_callback" size="4"/>
+            <object type="data" name="futex_hash_slots" size="4"/>
+            <object type="data" name="kernel_api_version" size="4"/>
+            <object type="data" name="futex_hash" size="4"/>
+            <object type="data" name="futex_pending_tags" size="4"/>
+            <object type="data" name="tcbs" size="4"/>
+            <object type="data" name="serial_mem0" size="4"/>
+            <object type="data" name="interrupt_mem0" size="4"/>
+            <object type="data" name="priority_heads" size="4"/>
+            <object type="data" name="max_tcbs" size="4"/>
+            <object type="data" name="priority_bitmap" size="4"/>
+            <object type="data" name="tcb_free_head" size="4"/>
+            <object type="data" name="futex_hash_slots_lg2" size="4"/>
+            <object type="data" name="output_lock" size="0"/>
+            <object type="data" name="num_pending_tags" size="4"/>
+            <object type="data" name="futex_lock" size="0"/>
+            <object type="data" name="ipc_lock" size="0"/>
+            <object type="data" name="signal_lock" size="0"/>
+            <object type="data" name="tcb_lock" size="0"/>
+            <object type="data" name="schedule_lock" size="0"/>
+            <object type="data" name="interrupt_handlers" size="128"/>
+            <object type="data" name="interrupt_lock" size="0"/>
+          </object_list>
+        </program>
+      </space>
+    </kernel>
+    <cell name="ntest">
+      <space name="">
+        <pool id="vm1" vmid="kspc" />
+        <program name="nanotest">
+          <psec_list>
+            <psec name="nanotest.text" phys="phys9" virt="kspc9" />
+            <psec name="nanotest.data" phys="phys11" virt="kspc16" />
+          </psec_list>
+          <object_list num_text="207" num_data="174">
+            <object type="text" name="nanotest-test_ATOMIC_1000_func" size="304"/>
+            <object type="text" name="nanotest-test1000_child_thread" size="76"/>
+            <object type="text" name="nanotest-test_FUTEX_1200_func" size="244"/>
+            <object type="text" name="nanotest-test_FUTEX_1110_func" size="376"/>
+            <object type="text" name="nanotest-test_FUTEX_1100_func" size="212"/>
+            <object type="text" name="nanotest-test_FUTEX_1011_func" size="120"/>
+            <object type="text" name="nanotest-test_FUTEX_1010_func" size="68"/>
+            <object type="text" name="nanotest-test_FUTEX_1000_func" size="160"/>
+            <object type="text" name="nanotest-futex1100_child" size="112"/>
+            <object type="text" name="nanotest-futex1110_child" size="152"/>
+            <object type="text" name="nanotest-futex1200_child" size="80"/>
+            <object type="text" name="nanotest-test_INT_1100_func" size="128"/>
+            <object type="text" name="nanotest-test_INT_1003_func" size="260"/>
+            <object type="text" name="nanotest-test_INT_1002_func" size="204"/>
+            <object type="text" name="nanotest-test_INT_1001_func" size="208"/>
+            <object type="text" name="nanotest-test_INT_1000_func" size="116"/>
+            <object type="text" name="nanotest-int1002_child" size="100"/>
+            <object type="text" name="nanotest-int1003_child" size="52"/>
+            <object type="text" name="nanotest-int1100_child" size="52"/>
+            <object type="text" name="nanotest-test_IPC_2010_func" size="96"/>
+            <object type="text" name="nanotest-test_IPC_2000_func" size="104"/>
+            <object type="text" name="nanotest-test_IPC_1020_func" size="180"/>
+            <object type="text" name="nanotest-test_IPC_1010_func" size="72"/>
+            <object type="text" name="nanotest-test_IPC_1000_func" size="72"/>
+            <object type="text" name="nanotest-send_null_ipc" size="52"/>
+            <object type="text" name="nanotest-recv_null_ipc" size="176"/>
+            <object type="text" name="nanotest-ipc1020_sender" size="8"/>
+            <object type="text" name="nanotest-test2000_child" size="60"/>
+            <object type="text" name="nanotest-test2010_child" size="72"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX2010" size="4"/>
+            <object type="text" name="nanotest-futex2010" size="212"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX2000" size="4"/>
+            <object type="text" name="nanotest-futex2000" size="204"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX1210" size="4"/>
+            <object type="text" name="nanotest-futex1210_preemptee" size="32"/>
+            <object type="text" name="nanotest-futex1210_main" size="108"/>
+            <object type="text" name="nanotest-futex1210_helper" size="112"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX1200" size="4"/>
+            <object type="text" name="nanotest-futex1200_main" size="92"/>
+            <object type="text" name="nanotest-futex1200_helper" size="100"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX1110" size="4"/>
+            <object type="text" name="nanotest-futex1110_main" size="132"/>
+            <object type="text" name="nanotest-futex1110_target" size="116"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX1100" size="4"/>
+            <object type="text" name="nanotest-futex1100_main" size="20"/>
+            <object type="text" name="nanotest-futex1100_helper" size="96"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX1010" size="4"/>
+            <object type="text" name="nanotest-futex1010" size="180"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_FUTEX1000" size="4"/>
+            <object type="text" name="nanotest-futex1000" size="196"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_INT1300" size="4"/>
+            <object type="text" name="nanotest-int1300_master" size="312"/>
+            <object type="text" name="nanotest-int1300_handler" size="192"/>
+            <object type="text" name="nanotest-int1300_jitter_detector" size="92"/>
+            <object type="text" name="nanotest-int1300_low_thread" size="76"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_INT1210" size="4"/>
+            <object type="text" name="nanotest-int1210" size="128"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_INT1200" size="4"/>
+            <object type="text" name="nanotest-int1200_target" size="152"/>
+            <object type="text" name="nanotest-int1200_source" size="68"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_INT1110" size="4"/>
+            <object type="text" name="nanotest-int1110_target" size="148"/>
+            <object type="text" name="nanotest-int1110_source" size="176"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_INT1100" size="4"/>
+            <object type="text" name="nanotest-int1100" size="128"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_INT1000" size="4"/>
+            <object type="text" name="nanotest-int1000" size="240"/>
+            <object type="text" name="nanotest-int1300_detect_jitter" size="64"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_IPC1010" size="4"/>
+            <object type="text" name="nanotest-ipc1010_server" size="168"/>
+            <object type="text" name="nanotest-ipc1010_client" size="172"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_IPC1005" size="4"/>
+            <object type="text" name="nanotest-ipc1005_server" size="144"/>
+            <object type="text" name="nanotest-ipc1005_client" size="140"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_IPC1000" size="4"/>
+            <object type="text" name="nanotest-ipc1000_server" size="144"/>
+            <object type="text" name="nanotest-ipc1000_client" size="132"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_MISC1000" size="4"/>
+            <object type="text" name="nanotest-misc1000" size="184"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_YIELD1100" size="4"/>
+            <object type="text" name="nanotest-yield1100_first" size="192"/>
+            <object type="text" name="nanotest-yield1100_second" size="156"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__PERF_YIELD1000" size="4"/>
+            <object type="text" name="nanotest-yield1000_thread" size="184"/>
+            <object type="text" name="nanotest-__PERF_TEST_FUNC__NULL_TEST0" size="4"/>
+            <object type="text" name="nanotest-null_test" size="180"/>
+            <object type="text" name="nanotest-get_raw_result" size="740"/>
+            <object type="text" name="nanotest-test_SIGNAL_1100_func" size="236"/>
+            <object type="text" name="nanotest-test_SIGNAL_1010_func" size="76"/>
+            <object type="text" name="nanotest-test_SIGNAL_1000_func" size="388"/>
+            <object type="text" name="nanotest-test1100_child" size="132"/>
+            <object type="text" name="nanotest-nanotest_thread_entry" size="40"/>
+            <object type="text" name="nanotest-spinner_thread" size="24"/>
+            <object type="text" name="nanotest-test_THREAD_1200_func" size="228"/>
+            <object type="text" name="nanotest-test_THREAD_1100_func" size="192"/>
+            <object type="text" name="nanotest-test_THREAD_1010_func" size="508"/>
+            <object type="text" name="nanotest-test_THREAD_1000_func" size="244"/>
+            <object type="text" name="nanotest-test1000_child_thread" size="76"/>
+            <object type="text" name="nanotest-test1010_child_thread" size="32"/>
+            <object type="text" name="nanotest-test1100_child_thread" size="84"/>
+            <object type="text" name="nanotest-test1200_child" size="4"/>
+            <object type="text" name="nanotest-init_write" size="76"/>
+            <object type="text" name="nanotest-init_read" size="76"/>
+            <object type="text" name="nanotest-do_alloc_packet" size="32"/>
+            <object type="text" name="nanotest-free_packets" size="72"/>
+            <object type="text" name="nanotest-serial_write" size="356"/>
+            <object type="text" name="nanotest-serial_read" size="236"/>
+            <object type="text" name="nanotest-serial_init" size="476"/>
+            <object type="text" name="nanotest-null_write" size="8"/>
+            <object type="text" name="nanotest-null_read" size="8"/>
+            <object type="text" name="nanotest-null_init" size="56"/>
+            <object type="text" name="nanotest-device_setup_impl" size="192"/>
+            <object type="text" name="nanotest-device_enable_impl" size="64"/>
+            <object type="text" name="nanotest-device_disable_impl" size="28"/>
+            <object type="text" name="nanotest-device_poll_impl" size="8"/>
+            <object type="text" name="nanotest-device_interrupt_impl" size="232"/>
+            <object type="text" name="nanotest-device_num_interfaces_impl" size="8"/>
+            <object type="text" name="nanotest-device_get_interface_impl" size="8"/>
+            <object type="text" name="nanotest-timer_get_ticks_impl" size="40"/>
+            <object type="text" name="nanotest-timer_set_ticks_impl" size="76"/>
+            <object type="text" name="nanotest-timer_get_tick_frequency_impl" size="12"/>
+            <object type="text" name="nanotest-timer_set_tick_frequency_impl" size="12"/>
+            <object type="text" name="nanotest-timer_timeout_impl" size="256"/>
+            <object type="text" name="nanotest-device_setup_impl" size="220"/>
+            <object type="text" name="nanotest-device_enable_impl" size="16"/>
+            <object type="text" name="nanotest-device_disable_impl" size="16"/>
+            <object type="text" name="nanotest-device_poll_impl" size="8"/>
+            <object type="text" name="nanotest-device_interrupt_impl" size="164"/>
+            <object type="text" name="nanotest-device_num_interfaces_impl" size="8"/>
+            <object type="text" name="nanotest-device_get_interface_impl" size="28"/>
+            <object type="text" name="nanotest-stream_sync_impl" size="76"/>
+            <object type="text" name="nanotest-do_xmit_work" size="284"/>
+            <object type="text" name="nanotest-do_rx_work" size="280"/>
+            <object type="text" name="nanotest-putchar" size="16"/>
+            <object type="text" name="nanotest-__divdi3" size="1460"/>
+            <object type="text" name="nanotest-pause" size="8"/>
+            <object type="text" name="nanotest-okn_futex_init" size="12"/>
+            <object type="text" name="nanotest-printf" size="44"/>
+            <object type="text" name="nanotest-okn_semaphore_up" size="56"/>
+            <object type="text" name="nanotest-clock_register_interrupt" size="76"/>
+            <object type="text" name="nanotest-performance_test" size="112"/>
+            <object type="text" name="nanotest-__sys_entry" size="136"/>
+            <object type="text" name="nanotest-thread_bootstrap" size="148"/>
+            <object type="text" name="nanotest-run_tests" size="356"/>
+            <object type="text" name="nanotest-__sys_thread_entry" size="12"/>
+            <object type="text" name="nanotest-get_atomic_tests" size="12"/>
+            <object type="text" name="nanotest-memcpy" size="40"/>
+            <object type="text" name="nanotest-flush_timer_interrupt" size="40"/>
+            <object type="text" name="nanotest-get_futex_tests" size="12"/>
+            <object type="text" name="nanotest-okn_semaphore_down" size="56"/>
+            <object type="text" name="nanotest-puts" size="72"/>
+            <object type="text" name="nanotest-get_futex_perf_tests" size="12"/>
+            <object type="text" name="nanotest-get_yield_perf_tests" size="12"/>
+            <object type="text" name="nanotest-malloc" size="184"/>
+            <object type="text" name="nanotest-__udivsi3" size="248"/>
+            <object type="text" name="nanotest-_toupper" size="32"/>
+            <object type="text" name="nanotest-format_string" size="3040"/>
+            <object type="text" name="nanotest-okn_futex_lock" size="40"/>
+            <object type="text" name="nanotest-run_test" size="644"/>
+            <object type="text" name="nanotest-fflush" size="136"/>
+            <object type="text" name="nanotest-__umoddi3" size="1448"/>
+            <object type="text" name="nanotest-__udivdi3" size="1348"/>
+            <object type="text" name="nanotest-abort" size="4"/>
+            <object type="text" name="nanotest-get_signal_tests" size="12"/>
+            <object type="text" name="nanotest-__malloc_init" size="32"/>
+            <object type="text" name="nanotest-get_thread_tests" size="12"/>
+            <object type="text" name="nanotest-okn_semaphore_try_down" size="60"/>
+            <object type="text" name="nanotest-run_perf_tests" size="256"/>
+            <object type="text" name="nanotest-setup_performance_tests" size="152"/>
+            <object type="text" name="nanotest-fprintf" size="32"/>
+            <object type="text" name="nanotest-clock_init" size="328"/>
+            <object type="text" name="nanotest-clock_wait" size="368"/>
+            <object type="text" name="nanotest-__umodsi3" size="204"/>
+            <object type="text" name="nanotest-clock_process_interrupt" size="48"/>
+            <object type="text" name="nanotest-clock_generate_interrupt" size="248"/>
+            <object type="text" name="nanotest-rand" size="56"/>
+            <object type="text" name="nanotest-realloc" size="100"/>
+            <object type="text" name="nanotest-get_interrupt_perf_tests" size="12"/>
+            <object type="text" name="nanotest-get_interrupt_tests" size="12"/>
+            <object type="text" name="nanotest-memset" size="36"/>
+            <object type="text" name="nanotest-main" size="268"/>
+            <object type="text" name="nanotest-__div0" size="28"/>
+            <object type="text" name="nanotest-get_misc_perf_tests" size="12"/>
+            <object type="text" name="nanotest-create_thread" size="100"/>
+            <object type="text" name="nanotest-create_spinners" size="144"/>
+            <object type="text" name="nanotest-clock_read" size="284"/>
+            <object type="text" name="nanotest-okn_semaphore_init" size="8"/>
+            <object type="text" name="nanotest-okn_barrier_init" size="20"/>
+            <object type="text" name="nanotest-okn_barrier" size="108"/>
+            <object type="text" name="nanotest-fputc" size="268"/>
+            <object type="text" name="nanotest-morecore" size="96"/>
+            <object type="text" name="nanotest-delete_spinners" size="88"/>
+            <object type="text" name="nanotest-arch_init" size="12"/>
+            <object type="text" name="nanotest-clock_deregister_interrupt" size="64"/>
+            <object type="text" name="nanotest-okn_futex_trylock" size="12"/>
+            <object type="text" name="nanotest-okl4_env_get_segment" size="68"/>
+            <object type="text" name="nanotest-okn_futex_unlock" size="40"/>
+            <object type="text" name="nanotest-strlen" size="32"/>
+            <object type="text" name="nanotest-__assert" size="56"/>
+            <object type="text" name="nanotest-get_ipc_tests" size="12"/>
+            <object type="text" name="nanotest-okl4_env_get" size="236"/>
+            <object type="text" name="nanotest-get_ipc_perf_tests" size="12"/>
+            <object type="text" name="nanotest-serial_set_params" size="236"/>
+            <object type="text" name="nanotest-vfprintf" size="40"/>
+            <object type="text" name="nanotest-free" size="248"/>
+            <object type="text" name="nanotest-system_reset" size="20"/>
+            <object type="text" name="nanotest-clock_test" size="344"/>
+            <object type="data" name="nanotest-ATOMIC_1000" size="20"/>
+            <object type="data" name="nanotest-tests.0" size="8"/>
+            <object type="data" name="nanotest-FUTEX_1200" size="20"/>
+            <object type="data" name="nanotest-FUTEX_1110" size="20"/>
+            <object type="data" name="nanotest-FUTEX_1100" size="20"/>
+            <object type="data" name="nanotest-FUTEX_1011" size="20"/>
+            <object type="data" name="nanotest-FUTEX_1010" size="20"/>
+            <object type="data" name="nanotest-FUTEX_1000" size="20"/>
+            <object type="data" name="nanotest-tests.0" size="28"/>
+            <object type="data" name="nanotest-INT_1100" size="20"/>
+            <object type="data" name="nanotest-INT_1003" size="20"/>
+            <object type="data" name="nanotest-INT_1002" size="20"/>
+            <object type="data" name="nanotest-INT_1001" size="20"/>
+            <object type="data" name="nanotest-INT_1000" size="20"/>
+            <object type="data" name="nanotest-tests.0" size="24"/>
+            <object type="data" name="nanotest-IPC_2010" size="20"/>
+            <object type="data" name="nanotest-IPC_2000" size="20"/>
+            <object type="data" name="nanotest-IPC_1020" size="20"/>
+            <object type="data" name="nanotest-IPC_1010" size="20"/>
+            <object type="data" name="nanotest-IPC_1000" size="20"/>
+            <object type="data" name="nanotest-tests.0" size="24"/>
+            <object type="data" name="nanotest-futex1210_functions" size="32"/>
+            <object type="data" name="nanotest-futex1200_functions" size="24"/>
+            <object type="data" name="nanotest-futex1110_functions" size="24"/>
+            <object type="data" name="nanotest-futex1100_functions" size="24"/>
+            <object type="data" name="nanotest-tests.0" size="36"/>
+            <object type="data" name="nanotest-int1300_functions" size="64"/>
+            <object type="data" name="nanotest-int1200_functions" size="24"/>
+            <object type="data" name="nanotest-int1110_functions" size="24"/>
+            <object type="data" name="nanotest-int1110_source_tid" size="4"/>
+            <object type="data" name="nanotest-int1300_barrier" size="16"/>
+            <object type="data" name="nanotest-tests.1" size="28"/>
+            <object type="data" name="nanotest-ipc1010_functions" size="24"/>
+            <object type="data" name="nanotest-ipc1005_functions" size="24"/>
+            <object type="data" name="nanotest-ipc1000_functions" size="24"/>
+            <object type="data" name="nanotest-tests.0" size="16"/>
+            <object type="data" name="nanotest-tests.0" size="8"/>
+            <object type="data" name="nanotest-yield1100_barrier" size="16"/>
+            <object type="data" name="nanotest-tests.0" size="12"/>
+            <object type="data" name="nanotest-SIGNAL_1100" size="20"/>
+            <object type="data" name="nanotest-SIGNAL_1010" size="20"/>
+            <object type="data" name="nanotest-SIGNAL_1000" size="20"/>
+            <object type="data" name="nanotest-tests.0" size="16"/>
+            <object type="data" name="nanotest-THREAD_1200" size="20"/>
+            <object type="data" name="nanotest-THREAD_1100" size="20"/>
+            <object type="data" name="nanotest-THREAD_1010" size="20"/>
+            <object type="data" name="nanotest-THREAD_1000" size="20"/>
+            <object type="data" name="nanotest-tests.0" size="20"/>
+            <object type="data" name="nanotest-serial_init_result" size="1"/>
+            <object type="data" name="nanotest-device_ops" size="28"/>
+            <object type="data" name="nanotest-timer_ops" size="20"/>
+            <object type="data" name="nanotest-device_ops" size="28"/>
+            <object type="data" name="nanotest-stream_ops" size="4"/>
+            <object type="data" name="nanotest-PERF_FUTEX_1210" size="28"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_FUTEX1000" size="16"/>
+            <object type="data" name="nanotest-stdout" size="4"/>
+            <object type="data" name="nanotest-PERF_FUTEX_1100" size="28"/>
+            <object type="data" name="nanotest-PERF_FUTEX_1110" size="28"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_INT1000" size="16"/>
+            <object type="data" name="nanotest-PERF_FUTEX_2000" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_INT_1210" size="4"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__NULL_TEST_0" size="4"/>
+            <object type="data" name="nanotest-uart_8250" size="12"/>
+            <object type="data" name="nanotest-PERF_FUTEX_1000" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_INT_1200" size="4"/>
+            <object type="data" name="nanotest-PERF_YIELD_1100" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_1210" size="4"/>
+            <object type="data" name="nanotest-PERF_INT_1100" size="28"/>
+            <object type="data" name="nanotest-PERF_INT_1200" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_IPC_1010" size="4"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_IPC_1000" size="4"/>
+            <object type="data" name="nanotest-NULL_TEST_0" size="28"/>
+            <object type="data" name="nanotest-__stderr" size="68"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_1200" size="4"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_FUTEX2010" size="16"/>
+            <object type="data" name="nanotest-PERF_INT_1110" size="28"/>
+            <object type="data" name="nanotest-PERF_IPC_1005" size="28"/>
+            <object type="data" name="nanotest-PERF_INT_1210" size="28"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_FUTEX2000" size="16"/>
+            <object type="data" name="nanotest-__stdin" size="68"/>
+            <object type="data" name="nanotest-stdin" size="4"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_INT_1110" size="4"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_1010" size="4"/>
+            <object type="data" name="nanotest-PERF_FUTEX_1010" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_INT_1300" size="4"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_YIELD_1100" size="4"/>
+            <object type="data" name="nanotest-PERF_INT_1000" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_INT_1000" size="4"/>
+            <object type="data" name="nanotest-PERF_INT_1300" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_INT_1100" size="4"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_INT1210" size="16"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_MISC_1000" size="4"/>
+            <object type="data" name="nanotest-stderr" size="4"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_MISC1000" size="16"/>
+            <object type="data" name="nanotest-PERF_MISC_1000" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_1110" size="4"/>
+            <object type="data" name="nanotest-TEST_THREADS_NULL_TEST0" size="16"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_1100" size="4"/>
+            <object type="data" name="nanotest-PERF_IPC_1010" size="28"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_FUTEX1010" size="16"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_1000" size="4"/>
+            <object type="data" name="nanotest-_rand_next" size="4"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_YIELD_1000" size="4"/>
+            <object type="data" name="nanotest-__stdout" size="68"/>
+            <object type="data" name="nanotest-PERF_IPC_1000" size="28"/>
+            <object type="data" name="nanotest-pxa250_timer" size="12"/>
+            <object type="data" name="nanotest-PERF_FUTEX_1200" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_IPC_1005" size="4"/>
+            <object type="data" name="nanotest-PERF_YIELD_1000" size="28"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_2010" size="4"/>
+            <object type="data" name="nanotest-yield1100_threads" size="24"/>
+            <object type="data" name="nanotest-__PERF_TEST_INFO__PERF_FUTEX_2000" size="4"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_INT1100" size="16"/>
+            <object type="data" name="nanotest-PERF_FUTEX_2010" size="28"/>
+            <object type="data" name="nanotest-TEST_THREADS_PERF_YIELD1000" size="16"/>
+            <object type="data" name="nanotest-test1000_finished" size="4"/>
+            <object type="data" name="nanotest-test1000_a" size="4"/>
+            <object type="data" name="nanotest-test1000_real_a" size="4"/>
+            <object type="data" name="nanotest-resources" size="96"/>
+            <object type="data" name="nanotest-timer_device" size="20"/>
+            <object type="data" name="nanotest-futex1110_wait_tag" size="124"/>
+            <object type="data" name="nanotest-futex1110_should_be_sleeping" size="4"/>
+            <object type="data" name="nanotest-futex1110_barrier" size="16"/>
+            <object type="data" name="nanotest-futex1200_mem" size="4"/>
+            <object type="data" name="nanotest-futex1200_lock" size="4"/>
+            <object type="data" name="nanotest-int1100_sem" size="4"/>
+            <object type="data" name="nanotest-a.0" size="4"/>
+            <object type="data" name="nanotest-futex1110_ready" size="4"/>
+            <object type="data" name="nanotest-futex1210_finished" size="4"/>
+            <object type="data" name="nanotest-futex1100_started" size="4"/>
+            <object type="data" name="nanotest-futex1100_ready" size="4"/>
+            <object type="data" name="nanotest-int1110_ready" size="4"/>
+            <object type="data" name="nanotest-int1200_main_started" size="4"/>
+            <object type="data" name="nanotest-int1200_main_finished" size="4"/>
+            <object type="data" name="nanotest-int1300_handler_done" size="4"/>
+            <object type="data" name="nanotest-int1300_jitter" size="4"/>
+            <object type="data" name="nanotest-int1300_finished" size="4"/>
+            <object type="data" name="nanotest-int1300_test_success" size="4"/>
+            <object type="data" name="nanotest-int1300_medium_ready" size="4"/>
+            <object type="data" name="nanotest-int1300_jitter_detected" size="4"/>
+            <object type="data" name="nanotest-int1300_low_ready" size="4"/>
+            <object type="data" name="nanotest-int1300_low_preempted" size="4"/>
+            <object type="data" name="nanotest-int1300_medium_preempted" size="4"/>
+            <object type="data" name="nanotest-yield1100_test_started" size="4"/>
+            <object type="data" name="nanotest-yield1100_second_thread_started" size="4"/>
+            <object type="data" name="nanotest-overhead" size="4"/>
+            <object type="data" name="nanotest-performance_tests_setup" size="4"/>
+            <object type="data" name="nanotest-test1100_pid" size="4"/>
+            <object type="data" name="nanotest-test1100_ready" size="4"/>
+            <object type="data" name="nanotest-num_spinners" size="4"/>
+            <object type="data" name="nanotest-spinner_destroy" size="4"/>
+            <object type="data" name="nanotest-spinner_tids" size="4"/>
+            <object type="data" name="nanotest-test1000_child_pid" size="4"/>
+            <object type="data" name="nanotest-test1010_wake" size="4"/>
+            <object type="data" name="nanotest-test1010_finished" size="4"/>
+            <object type="data" name="nanotest-serial_device" size="24"/>
+            <object type="data" name="nanotest-resources" size="96"/>
+            <object type="data" name="nanotest-stream_packet" size="640"/>
+            <object type="data" name="nanotest-next_timeout" size="8"/>
+            <object type="data" name="nanotest-_kr_malloc_freep" size="4"/>
+            <object type="data" name="nanotest-test1100_count" size="4"/>
+            <object type="data" name="nanotest-CLOCK_IRQ" size="4"/>
+            <object type="data" name="nanotest-errno" size="4"/>
+            <object type="data" name="nanotest-__malloc_bss" size="4"/>
+            <object type="data" name="nanotest-__malloc_top" size="4"/>
+            <object type="data" name="nanotest-test1100_sem" size="4"/>
+            <object type="data" name="nanotest-__okl4_environ" size="4"/>
+            <object type="data" name="nanotest-futex1200_barrier" size="16"/>
+            <object type="data" name="nanotest-test2000_sem" size="4"/>
+            <object type="data" name="nanotest-test2010_sem" size="4"/>
+            <object type="data" name="nanotest-futex1100_flag" size="4"/>
+            <object type="data" name="nanotest-perf_start_cycle" size="4"/>
+            <object type="data" name="nanotest-perf_end_cycle" size="4"/>
+            <object type="data" name="nanotest-__malloc_base" size="8"/>
+          </object_list>
+        </program>
+        <program name="ntest">
+          <psec_list>
+            <psec name="ntest.serial_mem0" phys="phys18" virt="kspc13" />
+            <psec name="ntest.timer_mem0" phys="phys19" virt="kspc14" />
+            <psec name="ntest.cell_environment" phys="phys14" virt="kspc15" />
+            <psec name="ntest.heap" phys="phys20" virt="kspc17" />
+            <psec name="ntest.main/stack" phys="phys21" virt="kspc18" />
+            <psec name="ntest.serial_mem0" phys="phys18" virt="kspc20" />
+          </psec_list>
+          <object_list num_text="0" num_data="0">
+          </object_list>
+        </program>
+        <thread pool_id="tcb" handle_id="tcb" clist_id="tcb" />
+      </space>
+    </cell>
+  </environment>
+  <resources>
+    <phys_mem machine="ARM" name="xscale" pool="physical">
+      <section id="sdram" address="0x5c000000" size="0x40000" />
+      <section id="pcmcia_cf_slot_0" address="0x20000000" size="0x10000000" />
+      <section id="rom" address="0xa3800000" size="0x800000" />
+      <section id="pcmcia_cf_slot_1" address="0x30000000" size="0x10000000" />
+      <section id="physical" address="0xa0000000" size="0x3800000" />
+    </phys_mem>
+    <section_list>
+      <section id="phys0" address="0xa0000000" size="0x114" />
+      <section id="phys1" address="0xa0000120" size="0x1f8" />
+      <section id="phys2" address="0xa0000320" size="0x8ac" />
+      <section id="phys3" address="0xa0000be0" size="0x8c" />
+      <section id="phys4" address="0xa0000c80" size="0xee0" />
+      <section id="phys5" address="0xa0001b60" size="0x58" />
+      <section id="phys6" address="0xa0001bc0" size="0x400" />
+      <section id="phys7" address="0xa0002000" size="0x40" />
+      <section id="phys8" address="0xa0004000" size="0x8000" />
+      <section id="phys9" address="0xa0010000" size="0x798c" />
+      <section id="phys10" address="0xa0017990" size="0x1d00" />
+      <section id="phys11" address="0xa0003000" size="0x8a0" />
+      <section id="phys12" address="0xa00038a0" size="0x10" />
+      <section id="phys13" address="0xa00038b0" size="0x4dc" />
+      <section id="phys14" address="0xa000c000" size="0x536" />
+      <section id="phys15" address="0xa0017000" size="0x1000" />
+      <section id="phys16" address="0xa0018000" size="0x1000" />
+      <section id="phys17" address="0xa0019000" size="0x1000" />
+      <section id="phys18" address="0x40100000" size="0x1000" />
+      <section id="phys19" address="0x40a00000" size="0x1000" />
+      <section id="phys20" address="0xa0100000" size="0x100000" />
+      <section id="phys21" address="0xa0200000" size="0x1000" />
+      <section id="phys22" address="0x40d00000" size="0x1000" />
+    </section_list>
+    <segment_list>
+      <segment sections="phys0 phys1 phys2 phys3 phys4 phys5 phys6 phys7 "
+         phys="0xa0000000" virt="0xffff0000" filesz="0x2040" memsz="0x2040"/>
+      <segment sections="phys8 "
+         phys="0xa0004000" virt="0xffff4000" filesz="0x8000" memsz="0x8000"/>
+      <segment sections="phys9 phys10 "
+         phys="0xa0010000" virt="0x80000000" filesz="0x9690" memsz="0x9690"/>
+      <segment sections="phys11 phys12 phys13 "
+         phys="0xa0003000" virt="0x80012000" filesz="0x8b0" memsz="0xd8c"/>
+      <segment sections="phys14 "
+         phys="0xa000c000" virt="0x8000d000" filesz="0x536" memsz="0x536"/>
+    </segment_list>
+    <sas_list>
+      <sas id="sas1" />
+    </sas_list>
+    <ids>
+      <id_pool name="threads" source="tcb" total="32">
+      </id_pool>
+      <id_pool name="futexes" source="Heap0" total="64">
+      </id_pool>
+    </ids>
+    <pools>
+      <virt_mem id="kspc" sas_id="sas1">
+        <vm_section id="kspc0" address="0xffff0000" size="0x114" />
+        <vm_section id="kspc1" address="0xffff0120" size="0x1f8" />
+        <vm_section id="kspc2" address="0xffff0320" size="0x8ac" />
+        <vm_section id="kspc3" address="0xffff0be0" size="0x8c" />
+        <vm_section id="kspc4" address="0xffff0c80" size="0xee0" />
+        <vm_section id="kspc5" address="0xffff1b60" size="0x58" />
+        <vm_section id="kspc6" address="0xffff1bc0" size="0x400" />
+        <vm_section id="kspc7" address="0xffff2000" size="0x40" />
+        <vm_section id="kspc8" address="0xffff4000" size="0x8000" />
+        <vm_section id="kspc9" address="0x80000000" size="0x1000" />
+        <vm_section id="kspc10" address="0x80007000" size="0x1000" />
+        <vm_section id="kspc11" address="0x80008000" size="0x1000" />
+        <vm_section id="kspc12" address="0x80009000" size="0x1000" />
+        <vm_section id="kspc13" address="0x8000a000" size="0x1000" />
+        <vm_section id="kspc14" address="0x8000b000" size="0x1000" />
+        <vm_section id="kspc15" address="0x8000d000" size="0x1000" />
+        <vm_section id="kspc16" address="0x80012000" size="0x1000" />
+        <vm_section id="kspc17" address="0x80100000" size="0x100000" />
+        <vm_section id="kspc18" address="0x80200000" size="0x1000" />
+        <vm_section id="kspc19" address="0xa0000000" size="0x100000" />
+        <vm_section id="kspc20" address="0xfff00000" size="0x1000" />
+        <vm_section id="kspc21" address="0xfff01000" size="0x1000" />
+        <vm_section id="kspc22" address="0xfffef000" size="0x1000" />
+      </virt_mem>
+      <mem_pool id="Heap0" node="phys8">
+        <group name="queue" type="normal" size="36" />
+        <group name="pgtable" type="normal" size="19456" />
+        <group name="tcb" type="normal" size="5120" />
+        <group name="futex" type="normal" size="256" />
+      </mem_pool>
+      <mem_pool id="tcb" node="Heap0" />
+    </pools>
+  </resources>
+</memstats>

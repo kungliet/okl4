@@ -1,0 +1,20 @@
+	<linux clists="256" file="../vmlinux" kernel_heap="0x400000" mutexes="256" name="oklinux" spaces="256">
+		<use_device name="serial_dev"/>
+		<use_device name="timer_dev"/>
+		<environment>
+			<entry cap="heap/physical" key="heap_physical"/>
+			<entry cap="cs_mem1/physical" key="cs_mem1_physical"/>
+			<entry cap="cs_mem2/physical" key="cs_mem2_physical"/>
+		</environment>
+		<memsection align="0x200000" attach="rwx" cache_policy="strong" mem_type="virtual" name="dma_heap_segment" size="0x200000"/>
+		<memsection attach="rwx" mem_type="virtual" name="vmalloc" size="0x200000"/>
+		<use_device name="dma_dev"/>
+		<use_device name="gpio_dev"/>
+		<use_device name="cs_dev"/>
+		<stack size="0x2000"/>
+		<heap attach="rwx" size="0x1400000"/>
+		<commandline>
+			<arg value="vmlinux igms_name=ramdisk root=/dev/igms0 console=ttyS0,115200"/>
+		</commandline>
+		<memsection align="0x100000" file="cell/ext2ramdisk" name="rootfs"/>
+	</linux>

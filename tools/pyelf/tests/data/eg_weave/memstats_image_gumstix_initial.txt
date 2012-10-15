@@ -1,0 +1,38 @@
+
+Memory in Use at end of initialization
+=======================================
+
+Memory claimed by ELF image:
+ELF Segment 1: 0xa0000000 - 0xa002810b ( 160KB)
+ELF Segment 2: 0xa002c000 - 0xa0031fff (  24KB)
+ELF Segment 3: 0xa0034000 - 0xa003a8aa (  26KB)
+ELF Segment 4: 0xa00298ac - 0xa00299c3 (   0KB)
+ELF Segment 5: 0xa0040000 - 0xa008533b ( 276KB)
+ELF Segment 6: 0xa008e000 - 0xa00b0013 ( 136KB)
+ELF Segment 7: 0xa003b000 - 0xa003b990 (   2KB)
+ELF Segment 8: 0xa00b1000 - 0xa00b1b13 (   2KB)
+ELF Segment 9: 0xa002a000 - 0xa002afff (   4KB)
+
+   9 Segments giving    632KB
+
+SAS1:
+thread_handles                          0xa0500000 - 0xa0503fef (  15KB)
+                                        0xa0029000 - 0xa0029fff (   4KB)
+heap_exhaustion.main/stack              0xa003c000 - 0xa003cfff (   4KB)
+heap_exhaustion.heap                    0xa0600000 - 0xa06fffff (1024KB)
+ktest.main/stack                        0xa00b2000 - 0xa00b2fff (   4KB)
+ktest.serial_mem0                       0x40100000 - 0x40100fff (   4KB)
+ktest.timer_mem0                        0x40a00000 - 0x40a00fff (   4KB)
+ktest.heap                              0xa0700000 - 0xa07fffff (1024KB)
+   8 additional sections giving   2083KB
+
+Cell 1:
+  Heap	0xa0100000 - 0xa02fffff (2048KB)
+
+Cell 2:
+  Heap	0xa0300000 - 0xa04fffff (2048KB)
+
+Total Memory claimed for use:     6811KB
+
+Physical memory remaining: 50533KB of 57344KB
+

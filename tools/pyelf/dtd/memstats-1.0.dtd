@@ -1,0 +1,76 @@
+<!--
+  @LICENCE("Open Kernel Labs, Inc.", "2007")@
+
+  DTD of the elfweaver memstats output spec file.
+-->
+
+<!ELEMENT memstats (revision?, dynamic?, program+) >
+<!ELEMENT revision EMPTY >
+<!ELEMENT dynamic (thread_handles, ids, (heap, clist, space+, segment+)+)>
+<!ELEMENT thread_handles EMPTY >
+<!ELEMENT ids (spaces, caps, mutexes) >
+<!ELEMENT heap EMPTY >
+<!ELEMENT clist EMPTY >
+<!ELEMENT space (threads, mutexes, segments) >
+<!ELEMENT segment EMPTY >
+<!ELEMENT program (section_list, static_sizes, largest_objects?) >
+<!ELEMENT section_list (section+) >
+<!ELEMENT static_sizes (static_size, static_size_rounded) >
+<!ELEMENT largest_objects (object*) >
+<!ELEMENT object EMPTY >
+<!ELEMENT section EMPTY >
+<!ELEMENT static_size EMPTY >
+<!ELEMENT static_size_rounded EMPTY >
+<!ELEMENT tree EMPTY >
+<!ELEMENT changeset EMPTY >
+
+<!ATTLIST thread_handles total CDATA #REQUIRED >
+<!ATTLIST thread_handles used CDATA #REQUIRED >
+
+<!ATTLIST spaces total CDATA #REQUIRED >
+<!ATTLIST spaces used CDATA #REQUIRED >
+
+<!ATTLIST caps total CDATA #REQUIRED >
+<!ATTLIST caps used CDATA #REQUIRED >
+
+<!ATTLIST mutexes total CDATA #REQUIRED >
+<!ATTLIST mutexes used CDATA #REQUIRED >
+
+<!ATTLIST heap id CDATA #REQUIRED >
+<!ATTLIST heap size CDATA #REQUIRED >
+<!ATTLIST heap used CDATA #REQUIRED >
+
+<!ATTLIST clist size CDATA #REQUIRED >
+<!ATTLIST clist used CDATA #REQUIRED >
+
+<!ATTLIST space id CDATA #REQUIRED >
+<!ATTLIST space heap_id CDATA #REQUIRED >
+
+<!ATTLIST threads total CDATA #REQUIRED >
+<!ATTLIST threads used CDATA #REQUIRED >
+
+<!ATTLIST segments total CDATA #REQUIRED >
+<!ATTLIST segments used CDATA #REQUIRED >
+
+<!ATTLIST segment space_id CDATA #REQUIRED >
+<!ATTLIST segment size CDATA #REQUIRED >
+<!ATTLIST segment mapped CDATA #REQUIRED >
+
+<!ATTLIST program name CDATA #REQUIRED >
+<!ATTLIST program num_segments CDATA #REQUIRED >
+
+<!ATTLIST section name CDATA #REQUIRED >
+<!ATTLIST section size CDATA #REQUIRED >
+
+<!ATTLIST static_size size CDATA #REQUIRED >
+<!ATTLIST static_size_rounded size CDATA #REQUIRED >
+
+<!ATTLIST largest_objects num_text CDATA #REQUIRED >
+<!ATTLIST largest_objects num_data CDATA #REQUIRED >
+
+<!ATTLIST object type CDATA #REQUIRED >
+<!ATTLIST object name CDATA #REQUIRED >
+<!ATTLIST object size CDATA #REQUIRED >
+
+<!ATTLIST revision repository CDATA #IMPLIED >
+<!ATTLIST revision changeset CDATA #IMPLIED >

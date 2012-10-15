@@ -1,0 +1,280 @@
+<device name="tms320dm646x_uart">
+<!--
+Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+All rights reserved.
+
+1. Redistribution and use of OKL4 (Software) in source and binary
+forms, with or without modification, are permitted provided that the
+following conditions are met:
+
+    (a) Redistributions of source code must retain this clause 1
+        (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+        (Licence Terms) and the above copyright notice.
+
+    (b) Redistributions in binary form must reproduce the above
+        copyright notice and the Licence Terms in the documentation and/or
+        other materials provided with the distribution.
+
+    (c) Redistributions in any form must be accompanied by information on
+        how to obtain complete source code for:
+       (i) the Software; and
+       (ii) all accompanying software that uses (or is intended to
+       use) the Software whether directly or indirectly.  Such source
+       code must:
+       (iii) either be included in the distribution or be available
+       for no more than the cost of distribution plus a nominal fee;
+       and
+       (iv) be licensed by each relevant holder of copyright under
+       either the Licence Terms (with an appropriate copyright notice)
+       or the terms of a licence which is approved by the Open Source
+       Initative.  For an executable file, "complete source code"
+       means the source code for all modules it contains and includes
+       associated build and other files reasonably required to produce
+       the executable.
+
+2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+
+3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+    <state name="enabled" />
+    <state name="disabled" />
+
+    <interface name="rx" interface_type="stream" />
+    <interface name="tx" interface_type="stream" />
+
+    <resource name="main" rtype="mem_space_t" />
+
+    <block name="main" space_type="mem" space="main" register_size="32">
+
+    <register name="rhr" offset="0x0" type="ro">
+        <field name = "data" bits = "0:7" />
+    </register>
+
+    <register name="thr" offset="0x0" type="wo">
+        <field name = "data" bits = "0:7" />
+    </register>
+
+    <register name="dll" offset="0x0" type="rw">
+        <field name = "lsb" bits = "0:7" />
+     </register>
+
+     <register name="ier" offset = "0x4" type="rw">
+        <field name = "rhri" bits = "0" />
+        <field name = "thri" bits = "1" />
+        <field name = "lsi" bits = "2" />
+        <field name = "msi" bits = "3" />
+        <field name = "sm" bits = "4" />
+        <field name = "xi" bits = "5" />
+        <field name = "ri" bits = "6" />
+        <field name = "ci" bits = "7" />
+     </register>
+
+ <register name="dlh" offset = "0x4" type="rw">
+    <field name = "msb" bits = "0:5" />
+ </register>
+
+ <register name="iir" offset = "0x8" type="ro">
+    <field name = "ip" bits = "0"/>
+    <field name = "it" bits = "1:5" />
+    <field name = "fm" bits = "6:7" />
+ </register>
+
+ <register name="fcr" offset = "0x8" type="wo">
+    <field name = "fifoen" bits = "0"/>
+    <field name = "rxfifoclr" bits = "1"/>
+    <field name = "txfifoclr" bits = "2" />
+    <field name = "dma" bits = "3" />
+    <field name = "txfifotr" bits = "4:5" />
+    <field name = "rxfifotr" bits = "6:7" />
+ </register>
+
+ <register name="efr" offset = "0x8" type="rw">
+    <field name = "swfc" bits = "0:3" />
+    <field name = "ehen" bits = "4" />
+    <field name = "spcd" bits = "5" />
+    <field name = "aren" bits = "6" />
+    <field name = "acen" bits = "7" />
+ </register>
+
+ <register name="lcr" offset = "0xC" type="rw">
+    <field name = "chlen" bits = "0:1" />
+    <field name = "nbstop" bits = "2" />
+    <field name = "paren" bits = "3" />
+    <field name = "partypo" bits = "4" />
+    <field name = "partypt" bits = "5" />
+    <field name = "brken" bits = "6" />
+    <field name = "diven" bits = "7" />
+ </register>
+
+ <register name="mcr" offset = "0x10" type="rw">
+    <field name = "dtr" bits = "0" />
+    <field name = "rts" bits = "1" />
+    <field name = "rsc" bits = "2" />
+    <field name = "csc" bits = "3" />
+    <field name = "loopbken" bits = "4" />
+    <field name = "xonen" bits = "5" />
+    <field name = "tcrtlr" bits = "6" />
+ </register>
+
+ <register name="xono" offset = "0x10" type="rw">
+    <field name = "xonwordo" bits = "0:7" />
+ </register>
+
+ <register name="lsr" offset = "0x14" type="rw">
+    <field name = "rxfifoe" bits = "0" />
+    <field name = "rxoe" bits = "1" />
+    <field name = "rxpe" bits = "2" />
+    <field name = "rxfe" bits = "3" />
+    <field name = "rxbi" bits = "4" />
+    <field name = "txfifoe" bits = "5" />
+    <field name = "txsre" bits = "6" />
+    <field name = "rxfifosts" bits = "7" />
+ </register>
+
+ <register name="xont" offset = "0x14" type="rw">
+    <field name = "xonwordt" bits = "0:7" />
+ </register>
+
+ <register name="msr" offset = "0x18" type="rw">
+    <field name = "ctssts" bits = "0" />
+    <field name = "dsrsts" bits = "1" />
+    <field name = "rists" bits = "2" />
+    <field name = "dcdsts" bits = "3" />
+    <field name = "nctssts" bits = "4" />
+    <field name = "ndsrsts" bits = "5" />
+    <field name = "nrists" bits = "6" />
+    <field name = "ncdsts" bits = "7" />
+ </register>
+
+ <register name="tcr" offset = "0x18" type="rw">
+    <field name = "rxfifotrhlt" bits = "0:3" />
+    <field name = "rxfifotrst" bits = "4:7" />
+ </register>
+
+ <register name="xoffo" offset = "0x18" type="rw">
+    <field name = "xoffwordo" bits = "0:7" />
+ </register>
+
+ <register name="spr" offset = "0x1C" type="rw">
+    <field name = "sprword" bits = "0:7" />
+ </register>
+
+ <register name="tlr" offset = "0x1C" type="rw">
+    <field name = "txfifotrdma" bits = "0:3" />
+    <field name = "rxfifotrdma" bits = "4:7" />
+ </register>
+
+ <register name="xofft" offset = "0x1C" type="rw">
+    <field name = "xoffwordt" bits = "0:7" />
+ </register>
+
+ <register name="mdro" offset = "0x20" type="rw">
+    <field name = "modesel" bits = "0:2" />
+    <field name = "irsleep" bits = "3" />
+    <field name = "settxir" bits = "4" />
+    <field name = "sct" bits = "5" />
+    <field name = "sipmode" bits = "6" />
+    <field name = "frendmode" bits = "7" />
+ </register>
+
+ <register name="mdrt" offset = "0x24" type="rw">
+    <field name = "irtxunderrun" bits = "0" />
+    <field name = "stsfifotr" bits = "1:2" />
+    <field name = "uartpulse" bits = "3" />
+    <field name = "cirpulsemode" bits = "4:5" />
+    <field name = "irrxinvert" bits = "6" />
+ </register>
+
+ <register name="sflsr" offset = "0x28" type="ro">
+    <field name = "crcerror" bits = "1" />
+    <field name = "abortdet" bits = "2" />
+    <field name = "frametoolongerr" bits = "3" />
+    <field name = "oeerror" bits = "4" />
+ </register>
+
+ <register name="txfll" offset = "0x28" type="wo">
+    <field name = "txfl" bits = "0:7" />
+ </register>
+
+ <register name="resume" offset = "0x2C" type="ro">
+    <field name = "resume" bits = "0:7" />
+ </register>
+
+ <register name="txflh" offset = "0x2C" type="wo">
+    <field name = "txflh" bits = "0:4" />
+ </register>
+
+ <register name="sfregl" offset = "0x30" type="ro">
+    <field name = "sfregl" bits = "0:7" />
+ </register>
+
+ <register name="rxfll" offset = "0x30" type="wo">
+    <field name = "rxfll" bits = "0:7" />
+ </register>
+
+ <register name="sfregh" offset = "0x34" type="ro">
+    <field name = "resume" bits = "0:3" />
+ </register>
+
+ <register name="rxflh" offset = "0x34" type="wo">
+    <field name = "rxflh" bits = "0:3" />
+ </register>
+
+ <register name="blr" offset = "0x38" type="ro">
+    <field name = "xboftype" bits = "6" />
+    <field name = "stsfiforeset" bits = "7" />
+ </register>
+
+ <register name="uasr" offset = "0x38" type="ro">
+    <field name = "speed" bits = "0:4" />
+    <field name = "bitbchar" bits = "5" />
+    <field name = "partype" bits = "6:7" />
+ </register>
+
+ <register name="acreg" offset = "0x3C" type="rw">
+    <field name = "eoten" bits = "0" />
+    <field name = "aborten" bits = "1" />
+    <field name = "sctxen" bits = "2" />
+    <field name = "sndsip" bits = "3" />
+    <field name = "distxunderrun" bits = "4" />
+    <field name = "disirrx" bits = "5" />
+    <field name = "sdmod" bits = "6" />
+    <field name = "pulsetype" bits = "7" />
+ </register>
+
+ <register name="scr" offset = "0x3C" type="rw">
+    <field name = "eoten" bits = "0" />
+    <field name = "aborten" bits = "1" />
+    <field name = "sctxen" bits = "2" />
+    <field name = "sndsip" bits = "3" />
+    <field name = "distxunderrun" bits = "4" />
+    <field name = "disirrx" bits = "5" />
+    <field name = "sdmod" bits = "6" />
+    <field name = "pulsetype" bits = "7" />
+    </register>
+
+   </block>
+</device>
+

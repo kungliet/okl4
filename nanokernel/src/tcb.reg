@@ -1,0 +1,44 @@
+//
+// Kernel TCB Layout
+//
+// Fields are in the form:
+//     <c data type> <name> "comment"
+//
+// If fields have aliases, they are all listed seperated by commas.
+// Fields with the special type 'asm' are only generated in assembly
+// listings.
+//
+name tcb
+
+//
+// User Registers
+//
+/************************************************************************/
+#include <arch/tcb.reg>
+/************************************************************************/
+
+//
+// Thread State
+//
+/************************************************************************/
+word_t priority                        "Thread priority."
+word_t thread_state                    "Thread state."
+tcb_t* next, asm prev_next             "Pointer to next thread in a blocked list."
+tcb_t* prev                            "Pointer to previous thread in a blocked list."
+word_t futex_tag                       "Futex tag this thread is waiting on."
+word_t tid                             "Thread ID."
+tcb_t* ipc_waiting_for                 "Thread that this thread is attempting to send to."
+tcb_t* ipc_send_head                   "Highest priority thread waiting to send to this thread."
+/************************************************************************/
+word_t signals                         "Signals currently pending for this thread."
+word_t signal_mask                     "Mask of signals this thread should be woken for."
+word_t registered_interrupt            "Bitfield of interrupts registered to."
+tcb_t* joiner                          "The thread we should wake when we exit."
+
+// Pad out to the next cache line
+word_t generic_padding_0
+word_t generic_padding_1
+word_t generic_padding_2
+word_t generic_padding_3
+/************************************************************************/
+

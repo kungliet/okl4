@@ -1,0 +1,178 @@
+#
+# Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+# All rights reserved.
+# 
+# 1. Redistribution and use of OKL4 (Software) in source and binary
+# forms, with or without modification, are permitted provided that the
+# following conditions are met:
+# 
+#     (a) Redistributions of source code must retain this clause 1
+#         (including paragraphs (a), (b) and (c)), clause 2 and clause 3
+#         (Licence Terms) and the above copyright notice.
+# 
+#     (b) Redistributions in binary form must reproduce the above
+#         copyright notice and the Licence Terms in the documentation and/or
+#         other materials provided with the distribution.
+# 
+#     (c) Redistributions in any form must be accompanied by information on
+#         how to obtain complete source code for:
+#        (i) the Software; and
+#        (ii) all accompanying software that uses (or is intended to
+#        use) the Software whether directly or indirectly.  Such source
+#        code must:
+#        (iii) either be included in the distribution or be available
+#        for no more than the cost of distribution plus a nominal fee;
+#        and
+#        (iv) be licensed by each relevant holder of copyright under
+#        either the Licence Terms (with an appropriate copyright notice)
+#        or the terms of a licence which is approved by the Open Source
+#        Initative.  For an executable file, "complete source code"
+#        means the source code for all modules it contains and includes
+#        associated build and other files reasonably required to produce
+#        the executable.
+# 
+# 2. THIS SOFTWARE IS PROVIDED ``AS IS'' AND, TO THE EXTENT PERMITTED BY
+# LAW, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  WHERE ANY WARRANTY IS
+# IMPLIED AND IS PREVENTED BY LAW FROM BEING DISCLAIMED THEN TO THE
+# EXTENT PERMISSIBLE BY LAW: (A) THE WARRANTY IS READ DOWN IN FAVOUR OF
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT) AND (B) ANY LIMITATIONS PERMITTED BY LAW (INCLUDING AS TO
+# THE EXTENT OF THE WARRANTY AND THE REMEDIES AVAILABLE IN THE EVENT OF
+# BREACH) ARE DEEMED PART OF THIS LICENCE IN A FORM MOST FAVOURABLE TO
+# THE COPYRIGHT HOLDER (AND, IN THE CASE OF A PARTICIPANT, THAT
+# PARTICIPANT). IN THE LICENCE TERMS, "PARTICIPANT" INCLUDES EVERY
+# PERSON WHO HAS CONTRIBUTED TO THE SOFTWARE OR WHO HAS BEEN INVOLVED IN
+# THE DISTRIBUTION OR DISSEMINATION OF THE SOFTWARE.
+# 
+# 3. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR ANY OTHER PARTICIPANT BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+from kenge import KengeBuild
+from opts import get_option_arg
+
+# Make it easier to raise UserErrors
+import SCons.Errors
+UserError = SCons.Errors.UserError
+
+#############################################################################
+## Setup build
+#############################################################################
+build = KengeBuild()
+
+kcell = build.Kernel()
+
+# Create a cell for each example, ensure valid multi-cell setup
+
+valid_examples = ["hello", "args", "pds_zones", "pingpong", "echo", "chatterbox", "decrypt", "oklinux", "empty"]
+
+# Do not add reverse lookups! The names in the valid_multicell lookup
+# are the names of cells which have ownership of the serial driver.
+# A root cell's partner cells will all get IPC caps to its main thread
+# eg. echo has serial, chatterbox does not
+valid_multicell = { 
+    "echo" : ["chatterbox", "decrypt"],
+    "oklinux" : ["decrypt"] }
+
+serial_lookup = {
+    "hello" : True,
+    "args" : True,
+    "pds_zones" : True,
+    "pingpong" : True,
+    "echo" : True,
+    "chatterbox" : False,
+    "oklinux" : True,
+    "decrypt" : False,
+    "empty" : False
+    }
+
+example_list = get_option_arg(build, 'EXAMPLE', None, valid_examples, True)
+if not example_list:
+    raise UserError, "No examples specified"
+for example in example_list:
+    if example not in valid_examples:
+        raise UserError, "Invalid example '%s' specified" % example
+
+# Single cell
+if not len(example_list) > 1:
+    root_cell = example_list[0]
+# Multicell checks
+else:
+    #if build.kernel == "nano":
+    #    raise UserError, "Nano kernel does not support multicell"
+    root_cell = None
+    valid_cells = []
+    for example in example_list:
+        if example in valid_multicell:
+            if root_cell: # root cell already found!
+                raise UserError, "Invalid multicell setup: " \
+                    "Cell '%s' not compatible with Cell '%s'" % \
+                    (example, root_cell)
+            root_cell = example
+            valid_cells = valid_multicell[example]
+
+    if not root_cell:
+        raise UserError, "Invalid multicell setup: Nobody has serial driver"
+
+    for example in example_list:
+        if example == root_cell:
+            continue
+        if example not in valid_cells:
+            raise UserError, "Invalid multicell setup: " \
+                "Cell '%s' not compatible with Cell '%s'" % \
+                (example, root_cell)
+
+example_cells = []
+for example in example_list:
+    if example == root_cell:
+        has_serial = True
+    else:
+        has_serial = False
+    if example == "oklinux":
+        celldir = "linux"
+    else:
+        celldir = "examples"
+    cell = build.Cell("cells/%s" % celldir,
+                              name="examples",
+                              example_name=example,
+                              has_serial=has_serial)
+    if build.kernel == "nano":
+        cell.Append(CPPDEFINES = ["NANOKERNEL"])
+
+    # Assign IPC caps to all partner cells in multicell config
+    if example != root_cell:
+        cell.env_append(None,
+                        key = "ROOT_CELL_CAP",
+                        cap = "/%s/main" % root_cell)
+        if example == "decrypt":
+            cell.env_append(None,
+                            key = "CAESAR_CIPHER_SHIFT",
+                            value = 1)
+    if example == root_cell and 'decrypt' in example_list:
+        cell.env_append(None,
+                        key = "SHMEM_CAP",
+                        cap = "/decrypt/shmem")
+        cell.env_append(None,
+                        key = "DECRYPT_CELL_CAP",
+                        cap = "/decrypt/main")
+
+    if build.kernel == "nano":
+        num_spaces = 1
+    else: # Share the spaces between the cells
+        num_spaces = 256 / len(example_list)
+    cell.set_cell_config(spaces=num_spaces)
+
+    example_cells.append(cell)
+
+
+pools = kcell.DefaultMemoryPools()
+
+build.Image(kernel = kcell, pools = pools, cells = example_cells)

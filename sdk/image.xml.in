@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<!-- @LICENCE("Open Kernel Labs, Inc.", "2008")@ -->
+<!DOCTYPE image
+  SYSTEM 'weaver-2.0.dtd'>
+<image>
+    <include file="@ABS_MACHINE_XML_PATH@"/>
+    <physical_pool direct="true" name="rom">
+        <memory src="rom"/>
+    </physical_pool>
+    <virtual_pool name="virtual">
+        <memory src="virtual"/>
+    </virtual_pool>
+    <physical_pool direct="true" name="physical">
+        <memory src="physical"/>
+    </physical_pool>
+    <include file="@ABS_KERNEL_XML_PATH@"/>
+    @ABS_CELL_XML_PATHS@
+</image>

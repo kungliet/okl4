@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE image SYSTEM "weaver-2.0.dtd">
+<image>
+    <machine>
+        <cpu name="xscale" />
+		<word_size size="0x20" />
+		<virtual_memory name="virtual">
+			<region base="0x1000" size="0xcffff000" />
+		</virtual_memory>
+		<physical_memory name="physical">
+			<region base="0xa0000000" size="0x3800000" />
+		</physical_memory>
+		<page_size size="0x1000" />
+
+        <phys_device name="dummy_dev">
+            <physical_memory name="dummy_mem0">
+                <region base="0x40100000" size="0x1000" />
+            </physical_memory>
+            <physical_memory name="dummy_mem1">
+                <region base="0x40102000" size="0x3000" />
+            </physical_memory>
+            <interrupt name="int_dummy0" number="10" />
+        </phys_device>
+
+	</machine>
+
+	<virtual_pool name="virtual">
+		<memory base="0x1000" size="0xcffff000"/>
+	</virtual_pool>
+
+	<physical_pool name="physical">
+		<memory base="0xa0000000" size="0x3800000"/>
+	</physical_pool>
+
+	<kernel file="data/eg_weave/l4kernel" virtpool="virtual" physpool="physical">
+	</kernel>
+
+	<iguana name="iguana_server" file="data/eg_weave/ig_server" kernel_heap="2M">
+        <program name="ig_naming" file="data/eg_weave/ig_naming">
+		</program>
+	</iguana>
+</image>

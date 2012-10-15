@@ -1,0 +1,32 @@
+
+Heap Usage
+===========
+
+Cell 1:
+Heap is Heap0 - size 2048KB with   38KB used
+Allocations:
+        root_clist:	     9KB
+          spaceids:	     1KB
+          clistids:	     2KB
+          mutexids:	     1KB
+             space:	     4KB
+      physseg_list:	     1KB
+             pgtab:	     4KB
+              utcb:	     4KB
+      l1_allocator:	     4KB
+               tcb:	     4KB
+      l0_allocator:	     4KB
+
+Cell 2:
+Heap is Heap1 - size 2048KB with   34KB used
+Allocations:
+        root_clist:	     9KB
+             space:	     4KB
+      physseg_list:	     1KB
+             pgtab:	     4KB
+              utcb:	     4KB
+      l1_allocator:	     4KB
+               tcb:	     4KB
+      l0_allocator:	     4KB
+
+

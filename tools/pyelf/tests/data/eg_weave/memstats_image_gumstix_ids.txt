@@ -1,0 +1,24 @@
+
+ID usage
+=========
+
+Type spaceid           245 available,  245 allocated to spaces
+Type clistid           257 available,  257 allocated to spaces
+Type mutexid           256 available,  256 allocated to spaces
+Type thread_handles   4092 available, 4092 allocated to spaces
+Type capabilities0    1024 available, 1024 allocated to spaces
+Type capabilities1    1024 available, 1024 allocated to spaces
+
+Cell 1:
+  Type caps       1024 allocated from 'capabilities0',         1 used
+  Space 'heap_exhaustion':
+    Type clists        1 allocated from 'clistid',             1 used
+    Type spaces        5 allocated from 'spaceid',             1 used
+    Type threads    4092 allocated from 'thread_handles',      2 used
+Cell 2:
+  Type caps       1024 allocated from 'capabilities1',         1 used
+  Space 'ktest':
+    Type clists      256 allocated from 'clistid',             1 used
+    Type spaces      240 allocated from 'spaceid',             1 used
+    Type threads    4092 allocated from 'thread_handles',      2 used
+    Type mutexes     256 allocated from 'mutexid',             0 used
