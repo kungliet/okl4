@@ -1,5 +1,5 @@
-#####################################################################
-# Copyright (c) 2008 Open Kernel Labs, Inc. (Copyright Holder).
+##############################################################################
+# Copyright (c) 2007 Open Kernel Labs, Inc. (Copyright Holder).
 # All rights reserved.
 # 
 # 1. Redistribution and use of OKL4 (Software) in source and binary
@@ -54,89 +54,45 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#####################################################################
 
-Import('*')
+import copy
 
 ############################################################################
-## Memory Pools
-#############################################################################
+# Versatile machines
+############################################################################
 
-machine=build.machine
-
-elfweaver_env = build.KengeEnvironment("images")
-elfweaver_env.process_global_config()
-pools = args['pools']
-cells = args['cells']
-
-apps = args['kernel'].apps + pools
-for c in cells:
-    apps.extend(c.apps)
-
-
-#############################################################################
-## Build Bootimage
-#############################################################################
-
-if( machine.platform == "pc99" ):
-
-    apps = elfweaver_env.LayoutVirtual(apps)
-    spec = elfweaver_env.GenWeaverXML(build.dom, apps)
-    elf_image, sim_image, boot_image = elfweaver_env.CreateImages(spec, apps)
-    boot_image = elfweaver_env.CreateFatImage([elf_image])
-
-    build.TestImage(boot_image)
-    build.RunImage(boot_image)
-    Default(boot_image)
-
-elif( getattr( machine, "macho", False) ):
-    # We will have kernel other binaries
-    apps = args['apps']
-
-    # Relocate the user-apps to fit
-    apps = build.MachoLayoutVirtual( apps )
-
-    # We need a boot image of the apps
-    boot_image = build.CreateLegionImage( apps )
-
-    # Set up
-    build.TestImage(boot_image)
-    build.RunImage(boot_image)
-
-    # Building without weaver
-    Default( boot_image )
-
-else:
-    # Standard 'weaver' building
-    apps = elfweaver_env.LayoutVirtual(apps)
-    spec = elfweaver_env.GenWeaverXML(build.dom, apps)
-    elf_image, sim_image, boot_image = elfweaver_env.CreateImages(spec, apps)
-    run_method = get_arg(build, 'RUN', None)
-    if (machine.__name__ == 'gumstix' and run_method == "hardware") or\
-        machine.__name__ == 'gta01' or machine.__name__ == 'gta01_xip':
-        build.TestImage(boot_image)
-        build.RunImage(boot_image)
-        Default(boot_image)
-    elif machine.__name__ in ["versatile", "versatile_uboot"]:
-        build.TestImage(boot_image)
-        build.RunImage(boot_image)
-        Default(boot_image)
-    elif machine.__name__ == 'realview':
-        build.TestImage(boot_image)
-        build.RunImage(boot_image)
-        Default(boot_image)
-    elif machine.__name__ == "kzm_arm11":
-        if (run_method == "hardware"):
-            build.expect_test_data = [('KZM_ARM11 #', 'cfsetenv bootfile regression/kzm_arm11'),
-                                      ('KZM_ARM11 #', 'dhcp'), ('KZM_ARM11 #', 'go 0x80000000')] + build.expect_test_data
-        build.TestImage(boot_image)
-        build.RunImage(boot_image)
-        Default(boot_image)
-    else:
-        build.TestImage(sim_image)
-        build.RunImage(sim_image)
-        build.CoverageImage(sim_image)
-        Default(elf_image, sim_image, boot_image)
-if machine.__name__ == 'gta01' or machine.__name__ == 'gta01_xip':
-    build.expect_test_data = [('GTA01Bv4 #', 'bootelf 0x31000000')] + build.expect_test_data
-
+class realview(arm926ejs):
+    device_core = "realview"
+    virtual = False
+    platform = "realview"
+    memory = arm926ejs.memory.copy()
+    memory['physical'] = [Region(0x04100000L, 0x07900000L)]
+    memory['rom'] = [Region(0x07900000L, 0x08000000L)]
+    timer_driver_v2 = "sp804_timer"
+    memory_timer = [Region(0x101e3000, 0x101e4000, "all", "uncached")]
+    interrupt_timer = [5]
+    serial_driver_v2 = "pl011_uart_v2"
+    memory_serial = [Region(0x101f1000, 0x101f2000, "all", "uncached")]
+    interrupt_serial = [12]
+    memory_eth = [Region(0x10010000, 0x10020000, "all", "uncached")]
+    interrupt_eth = [25]
+    memory_sys = [Region(0x10000000, 0x10001000, "all", "uncached")]
+    memory_clcd = [Region(0x10120000, 0x10121000, "all", "uncached")]
+    interrupt_clcd = [16]
+    memory_kmi0 = [Region(0x10006000, 0x10007000, "all", "uncached")]
+    interrupt_kmi0 = [35]
+    memory_kmi1 = [Region(0x10007000, 0x10008000, "all", "uncached")]
+    interrupt_kmi1 = [36]
+    v2_drivers = [
+                  (timer_driver_v2, "vtimer", memory_timer, interrupt_timer),
+                  (serial_driver_v2, "vserial", memory_serial, interrupt_serial),
+                  ("eth_device", "veth", memory_eth, interrupt_eth),
+                  ("versatilesys_device", "vversatilesys", memory_sys, []),
+                  ("kmi0_device", "vkmi0", memory_kmi0, interrupt_kmi0),
+                  ("kmi1_device", "vkmi1", memory_kmi1, interrupt_kmi1),
+                  ("clcd_device", "vclcd", memory_clcd, interrupt_clcd),
+                  ("test_device", "vtest", [], [6,7])
+                 ]
+    cpp_defines = arm926ejs.cpp_defines + ["REALVIEW_BOARD"]
+    zero_bss = True
+    copy_elf = True
