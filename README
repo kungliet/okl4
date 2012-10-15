@@ -1,0 +1,7 @@
+1. Compile
+tools/build.py machine=versatile project=examples example=hello kdb_serial=True PYFREEZE=False
+2. How to Run
+Simulator:
+qemu-1.0-reds directory is copied from embeddedxen.
+run below command to run image.boot in qemu simulator:
+./cmd-run

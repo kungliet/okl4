@@ -1,0 +1,2 @@
+../qemu-1.0-reds/arm-softmmu/qemu-system-arm -s -localtime -M versatileab -cpu arm926 -nographic -kernel build/images/image.boot
+
