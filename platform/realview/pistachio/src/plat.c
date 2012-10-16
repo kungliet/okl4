@@ -95,7 +95,6 @@ word_t soc_api_version = SOC_API_VERSION;
 void SECTION(".init")
 soc_init(void)
 {
-    volatile vic_t *sic = NULL;
     /* Map peripherals and control registers */
 
     versatile_io_vbase = kernel_add_mapping(SIZE_4K,
@@ -110,14 +109,15 @@ soc_init(void)
                                                 (addr_t)VERSATILE_TIMER0_PBASE,
                                                 SOC_CACHE_DEVICE);
     SOC_ASSERT(ALWAYS, versatile_timer0_vbase);
-    versatile_vic_vbase = kernel_add_mapping(SIZE_4K,
-                                             (addr_t)VERSATILE_VIC_PBASE,
+    versatile_gic_cpu_vbase = kernel_add_mapping(SIZE_4K,
+                                             (addr_t)VERSATILE_GIC_PBASE,
                                              SOC_CACHE_DEVICE);
-    SOC_ASSERT(ALWAYS, versatile_vic_vbase);
-    versatile_sic_vbase = kernel_add_mapping(SIZE_4K,
-                                             (addr_t)VERSATILE_SIC_PBASE,
+    SOC_ASSERT(ALWAYS, versatile_gic_cpu_vbase);
+    versatile_gic_dist_vbase = kernel_add_mapping(SIZE_4K*15,
+                                             (addr_t)(VERSATILE_GIC_PBASE + 0x1000),
                                              SOC_CACHE_DEVICE);
-    SOC_ASSERT(ALWAYS, versatile_sic_vbase);
+    SOC_ASSERT(ALWAYS, versatile_gic_dist_vbase);
+
     versatile_uart0_vbase = kernel_add_mapping(SIZE_4K,
                                                (addr_t)VERSATILE_UART0_PBASE,
                                                SOC_CACHE_DEVICE);
@@ -129,21 +129,19 @@ soc_init(void)
     SOC_TRACEF("TIMER0_PBASE:0x%08x TIMER0_VBASE:0x%08x\n",
                VERSATILE_TIMER0_PBASE,
                versatile_timer0_vbase);
-    SOC_TRACEF("VIC_PBASE:0x%08x VIC_VBASE:0x%08x\n",
-               VERSATILE_VIC_PBASE,
-               versatile_vic_vbase);
-    SOC_TRACEF("SIC_PBASE:0x%08x SIC_VBASE:0x%08x\n",
-               VERSATILE_SIC_PBASE,
-               versatile_sic_vbase);
+    SOC_TRACEF("GIC_CPU_PBASE:0x%08x GIC_CPU_VBASE:0x%08x\n",
+               VERSATILE_GIC_PBASE,
+               versatile_gic_cpu_vbase);
+    SOC_TRACEF("GIC_DIST_PBASE:0x%08x GIC_DIST_VBASE:0x%08x\n",
+               VERSATILE_GIC_PBASE+0x1000,
+               versatile_gic_dist_vbase);
     SOC_TRACEF("UART0_PBASE:0x%08x UART0_VBASE:0x%08x\n",
                VERSATILE_UART0_PBASE,
                versatile_uart0_vbase);
 
-    /* Clear all SIC interrupt forwards */
-    sic = (vic_t *)versatile_sic_vbase;
-    sic->protect = 0UL;
-
-    simplesoc_init();
+    /* Initialise interrupts. */
+    soc_init_interrupts();
+    
     init_clocks();
 }
 

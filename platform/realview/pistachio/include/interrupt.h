@@ -68,10 +68,7 @@
 
 #define IRQS  64
 
-#define VERSATILE_SIC_IRQ       31
-#define VERSATILE_SIC_OFFSET    32
-#define SIC_FORWARD_START       21
-#define SIC_FORWARD_END         26
+#define VERSATILE_GIC_OFFSET    32
 
 /* versatile interrupt handling utilities */
 void soc_init_interrupts(void);

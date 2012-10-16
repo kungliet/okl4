@@ -155,7 +155,7 @@ device_setup_impl(struct device_interface *di, struct pl011_uart_v2 *device,
     uartlcr_h_set_fen(1);   // Enable FIFOs
     uarticr_write(UARTICR_TXIC_MASK);    // Clear transmit interrupt
     uartcr_set_rxe(1);      // Receive enable
-    //uartcr_set_txe(1);    // Transmit enable
+    uartcr_set_txe(1);    // Transmit enable
 
     // Enable UART0
     uartcr_set_uarten(1);
@@ -330,7 +330,7 @@ do_xmit_work(struct pl011_uart_v2 *device)
             packet->data[packet->xferred]);
 
         // Turn on the transmitter
-        uartcr_set_txe(1);
+        // uartcr_set_txe(1);
 
         uartdr_set_data(packet->data[packet->xferred++]);
         while (uartfr_get_busy());    // XXX -gl
@@ -343,7 +343,7 @@ do_xmit_work(struct pl011_uart_v2 *device)
         }
     }
 
-    uartcr_set_txe(0);
+    // uartcr_set_txe(0);
 
     dprintf("%s: done.\n", __func__);
 }

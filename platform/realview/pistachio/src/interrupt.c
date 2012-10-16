@@ -72,106 +72,45 @@
 #include <kernel/arch/continuation.h>
 #include <simplesoc.h>
 
-addr_t versatile_vic_vbase;
-addr_t versatile_sic_vbase;
+addr_t versatile_gic_cpu_vbase;
+addr_t versatile_gic_dist_vbase;
 
-static int num_sic_irqs = 0;
 bool soc_timer_disabled = false;
-
-/* Enable passthrough of the given IRQ. */
-static void
-register_passthrough_irq(word_t irq)
-{
-    volatile sic_t *sic = (sic_t *)versatile_sic_vbase;
-
-    SOC_ASSERT(DEBUG, irq < (word_t) IRQS);
-    sic->irq_passthrough = (1UL << irq);
-}
-
-/* Disable passthrough of the given IRQ. */
-static void
-unregister_passthrough_irq(word_t irq)
-{
-    volatile sic_t *sic = (sic_t *)versatile_sic_vbase;
-
-    SOC_ASSERT(DEBUG, irq < (word_t) IRQS);
-    sic->irq_passthrough_clear = (1UL << irq);
-}
-
-/* Mask a SIC irq. */
-static void
-mask_sic_irq(word_t irq)
-{
-    volatile sic_t *sic = (sic_t *)versatile_sic_vbase;
-    sic->irq_enable_clear = (1UL << irq);
-}
-
-/* Unmask a SIC irq. */
-static void
-unmask_sic_irq(word_t irq)
-{
-    volatile sic_t *sic = (sic_t *)versatile_sic_vbase;
-    sic->irq_enable = (1UL << irq);
-}
 
 /* Called back on IRQ register. */
 void
 soc_register_irq_callback(word_t irq)
 {
-    if (irq >= SIC_FORWARD_START && irq <= SIC_FORWARD_END) {
-        register_passthrough_irq(irq);
-    }
-    if (irq > VERSATILE_SIC_IRQ) {
-        num_sic_irqs++;
-        soc_unmask_irq(VERSATILE_SIC_IRQ);
-        register_passthrough_irq(VERSATILE_SIC_IRQ);
-    }
+    soc_unmask_irq(irq);
 }
 
 /* Called back on IRQ deregister. */
 void
 soc_deregister_irq_callback(word_t irq)
 {
-    if (irq >= SIC_FORWARD_START && irq <= SIC_FORWARD_END) {
-        unregister_passthrough_irq(irq);
-    }
-
-    if (irq > VERSATILE_SIC_IRQ) {
-        num_sic_irqs--;
-        SOC_ASSERT(ALWAYS, num_sic_irqs >= 0);
-        if (num_sic_irqs == 0) {
-            soc_mask_irq(VERSATILE_SIC_IRQ);
-            unregister_passthrough_irq(VERSATILE_SIC_IRQ);
-        }
-    }
+    soc_mask_irq(irq);
 }
 
 /* Mask an IRQ. */
 void
 soc_mask_irq(word_t irq)
 {
-    volatile vic_t  *vic = (vic_t *)versatile_vic_vbase;
+    volatile gic_dist_t  *gic_dist_base = (gic_dist_t *)versatile_gic_dist_vbase;
     SOC_ASSERT(DEBUG, irq < (word_t) IRQS);
 
-    if (irq <= VERSATILE_SIC_IRQ) {
-        vic->irq_enable_clear = (1UL << irq);
-    } else {
-        mask_sic_irq(irq - VERSATILE_SIC_OFFSET);
-    }
+    gic_dist_base->clr_enable1 = 1 << irq;
 }
 
 /* Unmask an IRQ. */
 void
 soc_unmask_irq(word_t irq)
 {
-    volatile vic_t  *vic = (vic_t *)versatile_vic_vbase;
+	volatile gic_cpu_t *gic_cpu_base = (gic_cpu_t *)versatile_gic_cpu_vbase;
+    volatile gic_dist_t  *gic_dist_base = (gic_dist_t *)versatile_gic_dist_vbase;
     SOC_ASSERT(DEBUG, irq < (word_t) IRQS);
 
-    if (irq <= VERSATILE_SIC_IRQ) {
-        vic->irq_enable |= (1UL << irq);
-    } else {
-        unmask_sic_irq(irq - VERSATILE_SIC_OFFSET);
-    }
+    gic_cpu_base->int_ack = VERSATILE_GIC_OFFSET + irq;
+    gic_dist_base->set_enable1 |= 1 << irq;
 }
 
 /* Disable the system timer. */
@@ -199,12 +138,11 @@ soc_handle_interrupt(word_t ctx, word_t fiq)
     continuation_t cont = ASM_CONTINUATION;
     word_t irq;
 
-    volatile vic_t *vic = (vic_t *)versatile_vic_vbase;
-    volatile sic_t *sic = (sic_t *)versatile_sic_vbase;
+    volatile gic_cpu_t *gic_cpu_base = (gic_cpu_t *)versatile_gic_cpu_vbase;
 
     /* Get the IRQ that fired. */
-    SOC_ASSERT(ALWAYS, vic->irq_status);
-    irq = msb(vic->irq_status);
+    SOC_ASSERT(ALWAYS, gic_cpu_base->int_ack);
+    irq = gic_cpu_base->int_ack;
 
     /* Was it a timer IRQ? */
     if (irq == VERSATILE_TIMER0_IRQ) {
@@ -217,14 +155,35 @@ soc_handle_interrupt(word_t ctx, word_t fiq)
         soc_enable_timer();
     }
 
-    /* If it is a SIC IRQ, calculate the real IRQ number. */
-    if (irq == VERSATILE_SIC_IRQ) {
-        irq = msb(sic->irq_status);
-        irq += VERSATILE_SIC_OFFSET;
-    }
-
     /* Handle the IRQ. */
     simplesoc_handle_irq_reschedule(irq, cont);
     NOTREACHED();
+}
+
+void soc_init_interrupts(void)
+{
+    volatile gic_cpu_t *gic_cpu_base = (gic_cpu_t *)versatile_gic_cpu_vbase;
+    volatile gic_dist_t  *gic_dist_base = (gic_dist_t *)versatile_gic_dist_vbase;
+    int i;
+	
+	gic_cpu_base->pri_mask = 0xf0;    /* priority setting */
+	gic_cpu_base->cpu_control = 1;    /* enable gic0 */
+    
+    gic_dist_base->dist_ctrl = 0x0;
+    gic_dist_base->configuration[2] = 0x55555555;
+    gic_dist_base->configuration[3] = 0x55555555;
+    gic_dist_base->configuration[4] = 0x55555555;
+    gic_dist_base->configuration[5] = 0x55555555;
+    
+    for(i=0; i<16; i++)
+    {
+		gic_dist_base->priority[8+i] = 0xa0a0a0a0;
+	}
+	/* disable all interrupts */
+	gic_dist_base->clr_enable1 = 0xffffffff;
+	gic_dist_base->clr_enable2 = 0xffffffff;
+	gic_dist_base->dist_ctrl = 0x1;
+	
+	simplesoc_init();
 }
 

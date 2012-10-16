@@ -83,39 +83,55 @@ typedef struct SysCtl {
     /* add more */
 } SysCtl_t;
 
-typedef struct vic {
-    word_t irq_status;
-    word_t fiq_status;
-    word_t irq_raw_status;
-    word_t int_select;
-    word_t irq_enable;
-    word_t irq_enable_clear;
-    word_t irq_soft;
-    word_t irq_soft_clear;
-    word_t protect; /* 0x20 */
-    word_t pad[3];  /* 0x24 - 0x30 */
-    word_t vect_addr; /* 0x30 */
-    word_t def_vect_addr;
+typedef struct gic_cpu {
+    word_t cpu_control;    /* 0x00 */
+    word_t pri_mask;    /* 0x04 */
+    word_t binary_point;    /* 0x08 */
+    word_t int_ack;    /* 0x0C */
+    word_t int_eoi;    /* 0x10 */
+    word_t int_running;    /* 0x14 */
+    word_t int_pending_highest;    /* 0x18 */
     /* add more */
-} vic_t;
+} gic_cpu_t;
 
-typedef struct sic {
-    word_t irq_status;
-    word_t irq_raw_status;
-    word_t irq_enable;
-    word_t irq_enable_clear;
-    word_t irq_soft;            /* 0x10 */
-    word_t irq_soft_clear;
-    word_t pad[2];
-    word_t irq_passthrough;     /* 0x20 */
-    word_t irq_passthrough_clear;
-} sic_t;
+typedef struct gic_dist {
+    word_t dist_ctrl;    /* 0x00 */
+    word_t ctrl_type;    /* 0x04 */
+    word_t pad0[62];    /* 0x08 - 0xFC */
+    word_t set_enable0;    /* 0x100 */
+    word_t set_enable1;    /* 0x104 */
+    word_t set_enable2;    /* 0x108 */
+    word_t pad1[29];    /* 0x10C - 0x17C */
+    word_t clr_enable0;    /* 180 */
+    word_t clr_enable1;    /* 184 */
+    word_t clr_enable2;    /* 188 */
+    word_t pad2[29];    /* 0x18C - 0x1FC */
+    word_t set_pending0;    /* 200 */
+    word_t set_pending1;    /* 204 */
+    word_t set_pending2;    /* 208 */
+    word_t pad3[29];    /* 0x20C - 0x27C */
+    word_t clr_pending0;    /* 280 */
+    word_t clr_pending1;    /* 284 */
+    word_t clr_pending2;    /* 288 */
+    word_t pad4[29];    /* 0x28C - 0x2FC */
+    word_t active0;    /* 300 */
+    word_t active1;    /* 304 */
+    word_t active2;    /* 308 */
+    word_t pad5[61];    /* 0x30C - 0x3FC */
+    word_t priority[24];    /* 0x400 - 0x45C */
+    word_t pad6[925];    /* 0x460 - 0x7FC */
+    word_t cpu_targets[24];    /* 0x800 - 0x85C */
+    word_t pad7[925];    /* 0x860 - 0xBFC */
+    word_t configuration[6];    /* 0xC00 - 0xC14 */
+    word_t pad8[186];    /* 0xC18 - 0xEFC */
+    word_t software_int;    /* 0xF00 */
+} gic_dist_t;
 
 /* Versatile Timer */
 static const int TIMER_TICK_LENGTH = 5000;
 
 #define VERSATILE_TIMER0_IRQ     4
-#define VERSATILE_REG_IRQ_PBASE  0x10140000     /* Vectored interrupt controller */
+#define VERSATILE_REG_IRQ_PBASE  0x10040000     /* Vectored interrupt controller */
 
 #define VERSATILE_VIC_VECT_CNTL_ENABLE    (1UL << 5)
 #define VERSATILE_VIC_TIMER0_INT_BIT      (1UL << 4)
@@ -137,24 +153,17 @@ static const int TIMER_TICK_LENGTH = 5000;
         ((word_t)versatile_io_vbase + VERSATILE_SYS_RESETCTL_OFFSET))
 #define VERSATILE_SYS_CTRL_RESET_CONFIGCLR      0x1
 
-#define VERSATILE_SCTL_PBASE                    0x101E0000
+#define VERSATILE_SCTL_PBASE                    0x10001000  /* andy */
 #define VERSATILE_SCTL_VBASE                    ((word_t)versatile_sctl_vbase)
-#define VERSATILE_VIC_PBASE                     0x10140000      /* Vectored interrupt controller */
-#define VERSATILE_SIC_PBASE                     0x10003000      /* Secondary interrupt controler */
-#define VERSATILE_UART0_PBASE                   0x101F1000      /* UART 0 */
-#define VERSATILE_VIC_VECT_ADDR0_PBASE          (VERSATILE_VIC_PBASE + 0x100)
-#define VERSATILE_VIC_CNTL0_PBASE               (VERSATILE_VIC_PBASE + 0x200)
-#define VERSATILE_VIC_ITCR_PBASE                (VERSATILE_VIC_PBASE + 0x300)
-
-#define VERSATILE_REG_VIC_ENABLE_CLEAR_PADDR    (VERSATILE_VIC_PBASE + 0x14)
-#define VERSATILE_REG_VIC_ENABLE_PADDR          (VERSATILE_VIC_PBASE + 0x10)
+#define VERSATILE_GIC_PBASE                     0x10040000      /* Vectored interrupt controller */
+#define VERSATILE_UART0_PBASE                   0x10009000      /* UART 0 */
 
 #define VERSATILE_BIT_TIMER_EN0_SEL             15
 #define VERSATILE_BIT_TIMER_EN1_SEL             17
 #define VERSATILE_BIT_TIMER_EN2_SEL             19
 #define VERSATILE_BIT_TIMER_EN3_SEL             21
 
-#define VERSATILE_TIMER0_PBASE                  0x101E2000
+#define VERSATILE_TIMER0_PBASE                  0x10011000  /* andy */
 #define VERSATILE_TIMER0_VBASE                  (word_t)versatile_timer0_vbase
 #define VERSATILE_TIMER1_VBASE                  ((word_t)versatile_timer0_vbase + 0x20)
 #define VERSATILE_TIMER2_VBASE                  ((word_t)versatile_timer0_vbase + 0x1000)

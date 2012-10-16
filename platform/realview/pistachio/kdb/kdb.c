@@ -70,6 +70,7 @@
 
 static void console_putc(char c);
 static char console_getc(bool block);
+static void console_init(void);
 
 /****************************************************************************
  *
@@ -199,7 +200,96 @@ static char console_getc(bool block)
 #define DATAR           0x00000000
 #define STATUSR         0x00000018
 
+#define CONFIG_PL011_CLOCK    (24000000)
+#define DEFAULT_BAUD 115200
+
+#define UART_PL011_IBRD                 0x24
+#define UART_PL011_FBRD                 0x28
+#define UART_PL011_LCRH                 0x2C
+#define UART_PL011_CR                   0x30
+#define UART_PL011_IMSC                 0x38
+#define UART_PL011_PERIPH_ID0           0xFE0
+
+#define UART_PL011_LCRH_SPS             (1 << 7)
+#define UART_PL011_LCRH_WLEN_8          (3 << 5)
+#define UART_PL011_LCRH_WLEN_7          (2 << 5)
+#define UART_PL011_LCRH_WLEN_6          (1 << 5)
+#define UART_PL011_LCRH_WLEN_5          (0 << 5)
+#define UART_PL011_LCRH_FEN             (1 << 4)
+#define UART_PL011_LCRH_STP2            (1 << 3)
+#define UART_PL011_LCRH_EPS             (1 << 2)
+#define UART_PL011_LCRH_PEN             (1 << 1)
+#define UART_PL011_LCRH_BRK             (1 << 0)
+
+#define UART_PL011_CR_CTSEN             (1 << 15)
+#define UART_PL011_CR_RTSEN             (1 << 14)
+#define UART_PL011_CR_OUT2              (1 << 13)
+#define UART_PL011_CR_OUT1              (1 << 12)
+#define UART_PL011_CR_RTS               (1 << 11)
+#define UART_PL011_CR_DTR               (1 << 10)
+#define UART_PL011_CR_RXE               (1 << 9)
+#define UART_PL011_CR_TXE               (1 << 8)
+#define UART_PL011_CR_LPE               (1 << 7)
+#define UART_PL011_CR_IIRLP             (1 << 2)
+#define UART_PL011_CR_SIREN             (1 << 1)
+#define UART_PL011_CR_UARTEN            (1 << 0)
+
+#define UART_PL011_IMSC_OEIM            (1 << 10)
+#define UART_PL011_IMSC_BEIM            (1 << 9)
+#define UART_PL011_IMSC_PEIM            (1 << 8)
+#define UART_PL011_IMSC_FEIM            (1 << 7)
+#define UART_PL011_IMSC_RTIM            (1 << 6)
+#define UART_PL011_IMSC_TXIM            (1 << 5)
+#define UART_PL011_IMSC_RXIM            (1 << 4)
+#define UART_PL011_IMSC_DSRMIM          (1 << 3)
+#define UART_PL011_IMSC_DCDMIM          (1 << 2)
+#define UART_PL011_IMSC_CTSMIM          (1 << 1)
+#define UART_PL011_IMSC_RIMIM           (1 << 0)
+
 static unsigned char console_initialised = 0;
+
+static void console_init(void)
+{
+	unsigned int temp;
+	unsigned int divider;
+	unsigned int remainder;
+	unsigned int fraction;
+	volatile char *base = (char *)versatile_uart0_vbase;
+	const unsigned int baudRate = DEFAULT_BAUD;
+
+	/*
+	 ** First, disable everything.
+	 */
+	*((volatile word_t *)(base + UART_PL011_CR)) = 0x0;
+	
+
+	/*
+	 ** Set baud rate
+	 **
+	 ** IBRD = UART_CLK / (16 * BAUD_RATE)
+	 ** FBRD = ROUND((64 * MOD(UART_CLK,(16 * BAUD_RATE))) / (16 * BAUD_RATE))
+	 */
+	temp = 16 * baudRate;
+	divider = CONFIG_PL011_CLOCK / temp;
+	remainder = CONFIG_PL011_CLOCK % temp;
+	temp = (8 * remainder) / baudRate;
+	fraction = (temp >> 1) + (temp & 1);
+
+	*((volatile word_t *)(base + UART_PL011_IBRD)) = divider;
+	*((volatile word_t *)(base + UART_PL011_FBRD)) = fraction;
+
+	/*
+	 ** Set the UART to be 8 bits, 1 stop bit, no parity, fifo enabled.
+	 */
+	*((volatile word_t *)(base + UART_PL011_LCRH)) = UART_PL011_LCRH_WLEN_8 | UART_PL011_LCRH_FEN;
+
+	/*
+	 ** Finally, enable the UART
+	 */
+	*((volatile word_t *)(base + UART_PL011_CR)) = UART_PL011_CR_UARTEN | UART_PL011_CR_TXE | UART_PL011_CR_RXE;
+
+	return;
+}
 
 static void console_putc(char c)
 {
@@ -210,7 +300,7 @@ static void console_putc(char c)
             console_putc('\r');
         }
 
-        while (((*(volatile long *)(base + STATUSR)) & 8));
+        while ( ((*(volatile long *)(base + STATUSR)) & 0x20) != 0 );
         *(volatile unsigned char *)(base + DATAR)  = c;
     }
 }
@@ -248,6 +338,7 @@ int soc_console_getc(bool can_block)
 
 void soc_kdb_init(void)
 {
+	console_init();    /* andy */
 #if defined(CONSOLE_PORT_SERIAL)
     console_initialised = 1;
 #endif

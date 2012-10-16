@@ -67,30 +67,30 @@ class realview(arm926ejs):
     platform = "realview"
     memory = arm926ejs.memory.copy()
     memory['physical'] = [Region(0x04100000L, 0x07900000L)]
-    memory['rom'] = [Region(0x07900000L, 0x08000000L)]
+#    memory['rom'] = [Region(0x07900000L, 0x08000000L)]
     timer_driver_v2 = "sp804_timer"
-    memory_timer = [Region(0x101e3000, 0x101e4000, "all", "uncached")]
+    memory_timer = [Region(0x10011000, 0x10013000, "all", "uncached")]
     interrupt_timer = [5]
     serial_driver_v2 = "pl011_uart_v2"
-    memory_serial = [Region(0x101f1000, 0x101f2000, "all", "uncached")]
+    memory_serial = [Region(0x10009000, 0x1000C000, "all", "uncached")]
     interrupt_serial = [12]
-    memory_eth = [Region(0x10010000, 0x10020000, "all", "uncached")]
-    interrupt_eth = [25]
+#    memory_eth = [Region(0x10010000, 0x10020000, "all", "uncached")]
+#    interrupt_eth = [25]
     memory_sys = [Region(0x10000000, 0x10001000, "all", "uncached")]
-    memory_clcd = [Region(0x10120000, 0x10121000, "all", "uncached")]
-    interrupt_clcd = [16]
-    memory_kmi0 = [Region(0x10006000, 0x10007000, "all", "uncached")]
-    interrupt_kmi0 = [35]
-    memory_kmi1 = [Region(0x10007000, 0x10008000, "all", "uncached")]
-    interrupt_kmi1 = [36]
+#    memory_clcd = [Region(0x10020000, 0x10021000, "all", "uncached")]
+#    interrupt_clcd = [16]
+#    memory_kmi0 = [Region(0x10006000, 0x10007000, "all", "uncached")]
+#    interrupt_kmi0 = [35]
+#    memory_kmi1 = [Region(0x10007000, 0x10008000, "all", "uncached")]
+#    interrupt_kmi1 = [36]
     v2_drivers = [
                   (timer_driver_v2, "vtimer", memory_timer, interrupt_timer),
                   (serial_driver_v2, "vserial", memory_serial, interrupt_serial),
-                  ("eth_device", "veth", memory_eth, interrupt_eth),
+#                  ("eth_device", "veth", memory_eth, interrupt_eth),
                   ("versatilesys_device", "vversatilesys", memory_sys, []),
-                  ("kmi0_device", "vkmi0", memory_kmi0, interrupt_kmi0),
-                  ("kmi1_device", "vkmi1", memory_kmi1, interrupt_kmi1),
-                  ("clcd_device", "vclcd", memory_clcd, interrupt_clcd),
+#                  ("kmi0_device", "vkmi0", memory_kmi0, interrupt_kmi0),
+#                  ("kmi1_device", "vkmi1", memory_kmi1, interrupt_kmi1),
+#                  ("clcd_device", "vclcd", memory_clcd, interrupt_clcd),
                   ("test_device", "vtest", [], [6,7])
                  ]
     cpp_defines = arm926ejs.cpp_defines + ["REALVIEW_BOARD"]
