@@ -12,3 +12,9 @@ You may find these documents useful:
 * Elfweaver Reference Manual
 * OKL4 Reference Manual
 * SDK Tutorial: Hello World
+4. Run on RTSM
+Serial baudrate is 115200.
+Compile command as below:
+tools/build.py machine=realview project=examples example=hello kdb_serial=True PYFREEZE=False
+Memory usage uses the same configuration of versatile platform, this means it just use
+a part(64M) of it's whole memory(256M).
